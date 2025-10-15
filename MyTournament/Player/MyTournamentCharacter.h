@@ -41,33 +41,38 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> _lookAction;
 
-	// - Dash
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-	TObjectPtr<UInputAction> _dashAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-	float _dashForce = 1500.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-	float _dashVerticalLift = 100.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-	float _dashGroundedMultiplier = 1.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-	float _dashAirboneMultiplier = 0.75f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-	int _dashAvailableNum = 2;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-	float _dashRestoreCooldown = 1.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-	int _dashCurAvaiable = 2;
-
 	UPROPERTY(VisibleDefaultsOnly, Category = "Input")
 	FVector2D _movementVector;
+
+	// Dash
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "	Dash | Input")
+	TObjectPtr<UInputAction> _dashAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dash | Behavior")
+	float _dashInputThreshold = 0.25f; // _movementVector.Length() has to be >= than _dashInputThreshold for the dash to be able to happen
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dash | Behavior")
+	float _dashForce = 1500.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dash | Behavior")
+	float _dashVerticalLift = 100.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dash | Behavior")
+	float _dashGroundedMultiplier = 1.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dash | Behavior")
+	float _dashAirboneMultiplier = 0.75f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dash | Behavior")
+	int _dashAvailableNum = 2;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dash | Behavior")
+	float _dashRestoreCooldown = 1.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dash | State")
+	int _dashCurAvaiable = 2;
+
+
 
 	// Components
 
@@ -84,9 +89,17 @@ protected:
 	UPROPERTY(EditAnywhere, Category = Camera)
 	float _cameraScale = 0.6f;
 
+	// - Camera Holder
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
+	TObjectPtr<USceneComponent> _cameraHolder;
+
 	// - Mesh
 	UPROPERTY(VisibleAnywhere, Category = "First Person")
 	TObjectPtr<USkeletalMeshComponent> _fpsMesh;
+
+	// - Character Component (inerithed)
+	UPROPERTY(VisibleDefaultsOnly)
+	TObjectPtr<UCharacterMovementComponent> _movementComponent;
 
 	// Animation
 	UPROPERTY(EditAnywhere, Category = Animation)
@@ -100,6 +113,44 @@ protected:
 	TSubclassOf<UMyTournamentUI> _myTournamentUIClass;
 
 	TObjectPtr<UMyTournamentUI> _myTournamentUI;
+
+	// WallRunning
+	// - Settings
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WallRun | Settings")
+	float _wallRunMinVelocityStartup = 550.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WallRun | Settings")
+	float _wallRunInputThreshold = 0.3f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WallRun | Settings")
+	float _wallRunCheckVectorLength = 40.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WallRun | Settings")
+	float _wallRunCameraTiltValue = 10.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WallRun | Settings")
+	float _wallRunCameraTiltInterpSpeed = 5.0f;
+
+	// - Behavior
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WallRun | Behavior")
+	float _wallRunGravityScaleModifier = 0.25f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WallRun | Behavior")
+	float _wallRunSpeed = 1000.0f;
+	
+
+	// - State
+	UPROPERTY(VisibleAnywhere, Category = "WallRun | State")
+	bool _wallRunIsWallRunning = false;
+
+	UPROPERTY(VisibleAnywhere, Category = "WallRun | State")
+	bool _wallRunIsWallRunningRight = false;
+
+	UPROPERTY(VisibleAnywhere, Category = "WallRun | State")
+	float _wallRunTimeWallRunning = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, Category = "WallRun | State")
+	TObjectPtr<AActor> _wallRunLastWall;
 
 public:
 	UPROPERTY(BlueprintAssignable)
@@ -134,9 +185,33 @@ public:
 	void StopMoving();
 
 	UFUNCTION()
+	void CustomJump();
+
+	UFUNCTION()
+	void Landed(const FHitResult& hit) override;
+
+	UFUNCTION()
 	void Dash();
 
 	UFUNCTION()
 	void RefillOneDash();
+
+	UFUNCTION()
+	void DetectRunnableWalls();
+
+	UFUNCTION()
+	void StartWallRun(bool isRight, AActor* curWall);
+
+	UFUNCTION()
+	void HandleWallRunMovements(float deltaTime);
+
+	UFUNCTION()
+	void EndWallRun();
+
+	UFUNCTION()
+	void UpdateCameraTilt(float deltaTime);
+
+	UFUNCTION()
+	bool IsInNormalGroundedMovements();
 };
 
