@@ -305,8 +305,38 @@ void AMyTournamentCharacter::HandleWallRunMovements(float deltaTime)
 	_wallRunTimeWallRunning += 1 * deltaTime;
 	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("WallTime: ") + FString::SanitizeFloat(_wallRunTimeWallRunning));
 
+	// Check if the character hits the ground, if so, stop the wall run
 	if (!_movementComponent->IsFalling())
 		EndWallRun();
+
+	// Check if there's an obstacle in front that interrupts the wall run
+	FHitResult hitRes;
+	FVector start = GetActorLocation();
+	FVector end = start + (GetActorForwardVector() * _wallRunForwardObstacleCheckLength);
+
+	FCollisionQueryParams collParams;
+	collParams.AddIgnoredActor(this);
+
+	DrawDebugLine(GetWorld(), start, end, FColor::Blue, false, 2.0f, 0, 1.0f);
+
+	if (GetWorld()->LineTraceSingleByChannel(hitRes, start, end, ECollisionChannel::ECC_Visibility, collParams))
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("Hit something! ") + FString(hitRes.GetActor()->GetActorNameOrLabel()));
+		EndWallRun();
+	}
+
+	// Interrupt wall run by input, if the player presses opposite direction + back
+	if (_wallRunIsWallRunningRight)
+	{
+		if (_movementVector.X <= -0.5f && _movementVector.Y <= -0.5f)
+			EndWallRun();
+	}
+	else
+	{
+		if (_movementVector.X >= 0.5f && _movementVector.Y <= -0.5f)
+			EndWallRun();
+	}
+
 }
 
 void AMyTournamentCharacter::EndWallRun()

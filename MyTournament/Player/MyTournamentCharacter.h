@@ -41,7 +41,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> _lookAction;
 
-	UPROPERTY(VisibleDefaultsOnly, Category = "Input")
+	UPROPERTY(VisibleAnywhere, Category = "Input")
 	FVector2D _movementVector;
 
 	// Dash
@@ -123,7 +123,7 @@ protected:
 	float _wallRunInputThreshold = 0.3f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WallRun | Settings")
-	float _wallRunCheckVectorLength = 40.0f;
+	float _wallRunCheckVectorLength = 40.0f; // lenght of the vector to check for walls on the left and right of the player
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WallRun | Settings")
 	float _wallRunCameraTiltValue = 10.0f;
@@ -137,6 +137,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WallRun | Behavior")
 	float _wallRunSpeed = 1000.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WallRun | Settings")
+	float _wallRunForwardObstacleCheckLength = 50.0f;
 	
 
 	// - State
