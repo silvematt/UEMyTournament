@@ -3,6 +3,7 @@
 
 #include "MyTournamentCharacter.h"
 #include "../UI/MyTournamentUI.h"
+#include "Animation/MyTournamentAnimInstance.h"
 #include <Kismet/GameplayStatics.h>
 
 // Sets default values
@@ -59,8 +60,10 @@ void AMyTournamentCharacter::BeginPlay()
 	// Begin components
 	_fpsMesh->SetOnlyOwnerSee(true);
 	_fpsMesh->SetAnimInstanceClass(_fpsDefaultAnim->GeneratedClass);
+	_fpsAnimInstance = Cast<UMyTournamentAnimInstance>(_fpsMesh->GetAnimInstance());
 
 	GetMesh()->SetAnimInstanceClass(_tpsDefaultAnim->GeneratedClass);
+	_characterAnimInstance = Cast<UMyTournamentAnimInstance>(GetMesh()->GetAnimInstance());
 
 	// Get the movement component
 	_movementComponent = Cast<UCharacterMovementComponent>(GetMovementComponent());
@@ -77,6 +80,10 @@ void AMyTournamentCharacter::BeginPlay()
 void AMyTournamentCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	// Update _cameraHolder position to always follow the fpsMesh's head
+	_fpsMeshHeadSocket = _fpsMesh->GetSocketTransform(TEXT("head"), RTS_World);
+	_cameraHolder->SetWorldLocation(_fpsMeshHeadSocket.GetLocation());
 
 	// Checks for wall run
 	DetectRunnableWalls();
@@ -159,6 +166,7 @@ void AMyTournamentCharacter::Landed(const FHitResult& hit)
 
 void AMyTournamentCharacter::Dash()
 {
+	// If there's one dash available to the player and he's moving over the _dashInputThreshold
 	if (_dashCurAvaiable >= 1 && _movementVector.Length() >= _dashInputThreshold)
 	{
 		// We can perform a dash
@@ -170,11 +178,13 @@ void AMyTournamentCharacter::Dash()
 			if (_wallRunIsWallRunning)
 				EndWallRun();
 
+			// Get the dash direction
 			FVector vecRight = GetActorRightVector();
 			FVector vecForward = GetActorForwardVector();
 
 			dashDirection = (vecRight * _movementVector.X * _dashForce) + (vecForward * _movementVector.Y * _dashForce) + (GetActorUpVector() * _dashVerticalLift);
 
+			// Add the grounded/airbone multiplier
 			if (_movementComponent->IsFalling())
 				dashDirection *= _dashAirboneMultiplier;
 			else
@@ -182,11 +192,19 @@ void AMyTournamentCharacter::Dash()
 			
 			LaunchCharacter(dashDirection, true, true);
 
+			// Set a timer that will call RefillOneDash on _dashRestoreCooldown
 			FTimerHandle tHandle;
 			GetWorldTimerManager().SetTimer(tHandle, this, &AMyTournamentCharacter::RefillOneDash, _dashRestoreCooldown, false);
 			_dashCurAvaiable--;
 
+			// Broadcast the event
 			_onDashIsUsedDelegate.Broadcast(_dashCurAvaiable);
+
+			if (_movementVector.Y >= 0.7f)
+			{
+				_characterAnimInstance->_bIsDashing = true;
+				_fpsAnimInstance->_bIsDashing = true;
+			}
 		}
 	}
 }
@@ -429,4 +447,14 @@ void AMyTournamentCharacter::UpdateCameraTilt(float deltaTime)
 	float NewRoll = FMath::FInterpTo(CurrentRotation.Pitch, TargetRoll, deltaTime, _wallRunCameraTiltInterpSpeed);
 	CurrentRotation.Pitch = NewRoll;
 	_cameraHolder->SetRelativeRotation(CurrentRotation);
+}
+
+bool AMyTournamentCharacter::BPF_IsWallRunning()
+{
+	return _wallRunIsWallRunning;
+}
+
+bool AMyTournamentCharacter::BPF_IsWallRunningRight()
+{
+	return _wallRunIsWallRunningRight;
 }

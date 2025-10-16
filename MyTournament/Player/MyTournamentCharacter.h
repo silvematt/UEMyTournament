@@ -16,6 +16,7 @@ class UInputAction;
 class UInputComponent;
 class UAnimBlueprint;
 class UMyTournamentUI;
+class UMyTournamentAnimInstance;
 
 // Delegates
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDashIsUsedSignature, int, dashesNowAvailable);
@@ -93,6 +94,22 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
 	TObjectPtr<USceneComponent> _cameraHolder;
 
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Camera")
+	FTransform _fpsMeshHeadSocket; // to set _cameraHolder position always to be on the head socket
+
+	// - Animation
+	UPROPERTY(VisibleAnywhere, Category = "Animation")
+	TObjectPtr<UMyTournamentAnimInstance> _characterAnimInstance;
+
+	UPROPERTY(VisibleAnywhere, Category = "Animation")
+	TObjectPtr<UMyTournamentAnimInstance> _fpsAnimInstance;
+
+	UPROPERTY(EditAnywhere, Category = "Animation")
+	TObjectPtr<UAnimBlueprint> _fpsDefaultAnim;
+
+	UPROPERTY(EditAnywhere, Category = "Animation")
+	TObjectPtr<UAnimBlueprint> _tpsDefaultAnim;
+
 	// - Mesh
 	UPROPERTY(VisibleAnywhere, Category = "First Person")
 	TObjectPtr<USkeletalMeshComponent> _fpsMesh;
@@ -100,13 +117,6 @@ protected:
 	// - Character Component (inerithed)
 	UPROPERTY(VisibleDefaultsOnly)
 	TObjectPtr<UCharacterMovementComponent> _movementComponent;
-
-	// Animation
-	UPROPERTY(EditAnywhere, Category = Animation)
-	TObjectPtr<UAnimBlueprint> _fpsDefaultAnim;
-
-	UPROPERTY(EditAnywhere, Category = Animation)
-	TObjectPtr<UAnimBlueprint> _tpsDefaultAnim;
 
 	// HUD
 	UPROPERTY(EditAnywhere, Category = "HUD")
@@ -227,5 +237,13 @@ public:
 
 	UFUNCTION()
 	bool IsInNormalGroundedMovements();
+
+
+	// Blueprint
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	bool BPF_IsWallRunning();
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	bool BPF_IsWallRunningRight();
 };
 
