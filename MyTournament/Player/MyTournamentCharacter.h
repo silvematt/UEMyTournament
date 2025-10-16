@@ -126,6 +126,11 @@ protected:
 	float _wallRunCheckVectorLength = 40.0f; // lenght of the vector to check for walls on the left and right of the player
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WallRun | Settings")
+	float _wallRunStickCheckVectorLength = 80.0f;	// Once the wall run has started, this is the lenght of the vector that checks if we're still attached to the wall
+													// it's bigger than _wallRunCheckVectorLength because 1: we want _wallRunCheckVectorLength to be small for precise input, 
+													// 2: if the "stick-check" has the vector length too small, if we're sliding along a rounded surface it may fail
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WallRun | Settings")
 	float _wallRunCameraTiltValue = 10.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WallRun | Settings")
@@ -153,7 +158,13 @@ protected:
 	float _wallRunTimeWallRunning = 0.0f;
 
 	UPROPERTY(VisibleAnywhere, Category = "WallRun | State")
-	TObjectPtr<AActor> _wallRunLastWall;
+	FVector _wallRunCurWallNormal;
+
+	UPROPERTY(VisibleAnywhere, Category = "WallRun | State")
+	FVector _wallRunCurWallImpactPoint;
+
+	UPROPERTY(VisibleAnywhere, Category = "WallRun | State")
+	TObjectPtr<AActor> _wallRunLastWall; // last wall we ran on, while wallrunning it is the wall we're currently wallrunning
 
 public:
 	UPROPERTY(BlueprintAssignable)

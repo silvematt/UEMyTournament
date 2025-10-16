@@ -307,36 +307,101 @@ void AMyTournamentCharacter::HandleWallRunMovements(float deltaTime)
 
 	// Check if the character hits the ground, if so, stop the wall run
 	if (!_movementComponent->IsFalling())
+	{
 		EndWallRun();
+		return;
+	}
 
 	// Check if there's an obstacle in front that interrupts the wall run
-	FHitResult hitRes;
-	FVector start = GetActorLocation();
-	FVector end = start + (GetActorForwardVector() * _wallRunForwardObstacleCheckLength);
+	FHitResult obstacleHitRes;
+	FVector obstacleCheckStart = GetActorLocation();
+	FVector obstacleCheckEnd = obstacleCheckStart + (GetActorForwardVector() * _wallRunForwardObstacleCheckLength);
 
-	FCollisionQueryParams collParams;
-	collParams.AddIgnoredActor(this);
+	FCollisionQueryParams obstacleCheckCollParams;
+	obstacleCheckCollParams.AddIgnoredActor(this);
 
-	DrawDebugLine(GetWorld(), start, end, FColor::Blue, false, 2.0f, 0, 1.0f);
+	DrawDebugLine(GetWorld(), obstacleCheckStart, obstacleCheckEnd, FColor::Blue, false, 2.0f, 0, 1.0f);
 
-	if (GetWorld()->LineTraceSingleByChannel(hitRes, start, end, ECollisionChannel::ECC_Visibility, collParams))
+	if (GetWorld()->LineTraceSingleByChannel(obstacleHitRes, obstacleCheckStart, obstacleCheckEnd, ECollisionChannel::ECC_Visibility, obstacleCheckCollParams))
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("Hit something! ") + FString(hitRes.GetActor()->GetActorNameOrLabel()));
+		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("Hit something! ") + FString(obstacleHitRes.GetActor()->GetActorNameOrLabel()));
 		EndWallRun();
+		return;
 	}
 
 	// Interrupt wall run by input, if the player presses opposite direction + back
 	if (_wallRunIsWallRunningRight)
 	{
 		if (_movementVector.X <= -0.5f && _movementVector.Y <= -0.5f)
+		{
 			EndWallRun();
+			return;
+		}
 	}
 	else
 	{
 		if (_movementVector.X >= 0.5f && _movementVector.Y <= -0.5f)
+		{
 			EndWallRun();
+			return;
+		}
 	}
 
+	// If we're still wallrunning, follows the wall's surface tangent
+
+	// Trace the wall, so we can stick to it
+	FHitResult hitRes;
+	FVector start = GetActorLocation();
+	FVector end = start + (GetActorRightVector() * (_wallRunIsWallRunningRight ? 1 : -1) * _wallRunStickCheckVectorLength);
+
+	FCollisionQueryParams collParams;
+	collParams.AddIgnoredActor(this);
+
+	// Debug the trace
+	DrawDebugLine(GetWorld(), start, end, FColor::Green, false, 3.0f, 0, 1.0f);
+
+	// Check if we're still attached to the wall (if the player looks away, this will fail, so the 'else' will correctly deatach him from the wall)
+	if (GetWorld()->LineTraceSingleByChannel(hitRes, start, end, ECollisionChannel::ECC_Visibility, collParams))
+	{
+		// Check if it's the same wall we've started on
+		if (hitRes.GetActor() == _wallRunLastWall)
+		{
+			// Update normal and impact point
+			_wallRunCurWallNormal = hitRes.ImpactNormal;
+			_wallRunCurWallImpactPoint = hitRes.ImpactPoint;
+
+			// Draw wall normal (red)
+			DrawDebugLine(GetWorld(), _wallRunCurWallImpactPoint, _wallRunCurWallImpactPoint + _wallRunCurWallNormal * 200.0f, FColor::Red, false, 3.0f, 0, 2.0f);
+
+			// Compute the local tangent to get the direction to run along the surface
+			FVector forward = GetActorForwardVector();
+			FVector tangent = (forward - _wallRunCurWallNormal * FVector::DotProduct(forward, _wallRunCurWallNormal));
+
+			if (!tangent.IsNearlyZero(1e-4f))
+			{
+				tangent = tangent.GetSafeNormal();
+
+				// Make sure the direction of the tangent is forward
+				if (FVector::DotProduct(tangent, forward) < 0.0f)
+					tangent *= -1.0f;
+
+				// Draw the tangent
+				DrawDebugDirectionalArrow(GetWorld(), _wallRunCurWallImpactPoint, _wallRunCurWallImpactPoint + tangent * 200.0f, 30.0f, FColor::Cyan, false, 3, 0, 2.0f);
+
+				// Set velocity along the tangent: this forces the player to follow the local curvature
+				FVector newVel = tangent * _wallRunSpeed;
+				_movementComponent->Velocity.X = newVel.X;
+				_movementComponent->Velocity.Y = newVel.Y;
+				//_movementComponent->Velocity.Z = newVel.Z;  Keep z the same, so gravity still has effect
+			}
+			else
+				EndWallRun();
+		}
+		else
+			EndWallRun();
+	}
+	else
+		EndWallRun();
 }
 
 void AMyTournamentCharacter::EndWallRun()
