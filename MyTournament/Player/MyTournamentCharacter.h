@@ -42,6 +42,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> _lookAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	TObjectPtr<UInputAction> _crouchAction;
+
 	UPROPERTY(VisibleAnywhere, Category = "Input")
 	FVector2D _movementVector;
 
@@ -72,8 +75,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dash | State")
 	int _dashCurAvaiable = 2;
-
-
 
 	// Components
 
@@ -126,6 +127,9 @@ protected:
 
 	// WallRunning
 	// - Settings
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WallRun | Settings")
+	bool _wallRunDebugEnabled = false;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WallRun | Settings")
 	float _wallRunMinVelocityStartup = 550.0f;
 
@@ -238,6 +242,8 @@ public:
 	UFUNCTION()
 	bool IsInNormalGroundedMovements();
 
+	UFUNCTION()
+	void CustomCrouchToggle();
 
 	// Blueprint
 	UFUNCTION(BlueprintCallable, BlueprintPure)

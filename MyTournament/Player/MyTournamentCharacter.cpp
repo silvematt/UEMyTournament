@@ -85,6 +85,10 @@ void AMyTournamentCharacter::Tick(float DeltaTime)
 	_fpsMeshHeadSocket = _fpsMesh->GetSocketTransform(TEXT("head"), RTS_World);
 	_cameraHolder->SetWorldLocation(_fpsMeshHeadSocket.GetLocation());
 
+	// If we're falling, stop crouchign
+	if (IsCrouched() && _movementComponent->IsFalling())
+		UnCrouch();
+
 	// Checks for wall run
 	DetectRunnableWalls();
 
@@ -111,8 +115,9 @@ void AMyTournamentCharacter::SetupPlayerInputComponent(UInputComponent* PlayerIn
 		enhancedInput->BindAction(_lookAction, ETriggerEvent::Triggered, this, &AMyTournamentCharacter::Look);
 
 		enhancedInput->BindAction(_dashAction, ETriggerEvent::Started, this, &AMyTournamentCharacter::Dash);
-	}
 
+		enhancedInput->BindAction(_crouchAction, ETriggerEvent::Started, this, &AMyTournamentCharacter::CustomCrouchToggle);
+	}
 }
 
 void AMyTournamentCharacter::Move(const FInputActionValue& inputValue)
@@ -151,10 +156,16 @@ void AMyTournamentCharacter::Look(const FInputActionValue& inputValue)
 
 void AMyTournamentCharacter::CustomJump()
 {
-	if (_wallRunIsWallRunning)
-		EndWallRun();
-	
-	Jump();
+	// Use the jump button to uncrouch if crouched
+	if (IsCrouched())
+		UnCrouch();
+	else
+	{
+		if (_wallRunIsWallRunning)
+			EndWallRun();
+
+		Jump();
+	}
 }
 
 void AMyTournamentCharacter::Landed(const FHitResult& hit)
@@ -166,44 +177,50 @@ void AMyTournamentCharacter::Landed(const FHitResult& hit)
 
 void AMyTournamentCharacter::Dash()
 {
-	// If there's one dash available to the player and he's moving over the _dashInputThreshold
-	if (_dashCurAvaiable >= 1 && _movementVector.Length() >= _dashInputThreshold)
+	// Use the dash button to uncrouch if crouched
+	if (IsCrouched())
+		UnCrouch();
+	else
 	{
-		// We can perform a dash
-		// Get direction to dash towards to
-		FVector dashDirection = FVector(0,0,0);
-		if (Controller)
+		// If there's one dash available to the player and he's moving over the _dashInputThreshold
+		if (!IsCrouched() && _dashCurAvaiable >= 1 && _movementVector.Length() >= _dashInputThreshold)
 		{
-			// If player is wallruning, end wall run
-			if (_wallRunIsWallRunning)
-				EndWallRun();
-
-			// Get the dash direction
-			FVector vecRight = GetActorRightVector();
-			FVector vecForward = GetActorForwardVector();
-
-			dashDirection = (vecRight * _movementVector.X * _dashForce) + (vecForward * _movementVector.Y * _dashForce) + (GetActorUpVector() * _dashVerticalLift);
-
-			// Add the grounded/airbone multiplier
-			if (_movementComponent->IsFalling())
-				dashDirection *= _dashAirboneMultiplier;
-			else
-				dashDirection *= _dashGroundedMultiplier;
-			
-			LaunchCharacter(dashDirection, true, true);
-
-			// Set a timer that will call RefillOneDash on _dashRestoreCooldown
-			FTimerHandle tHandle;
-			GetWorldTimerManager().SetTimer(tHandle, this, &AMyTournamentCharacter::RefillOneDash, _dashRestoreCooldown, false);
-			_dashCurAvaiable--;
-
-			// Broadcast the event
-			_onDashIsUsedDelegate.Broadcast(_dashCurAvaiable);
-
-			if (_movementVector.Y >= 0.7f)
+			// We can perform a dash
+			// Get direction to dash towards to
+			FVector dashDirection = FVector(0, 0, 0);
+			if (Controller)
 			{
-				_characterAnimInstance->_bIsDashing = true;
-				_fpsAnimInstance->_bIsDashing = true;
+				// If player is wallruning, end wall run
+				if (_wallRunIsWallRunning)
+					EndWallRun();
+
+				// Get the dash direction
+				FVector vecRight = GetActorRightVector();
+				FVector vecForward = GetActorForwardVector();
+
+				dashDirection = (vecRight * _movementVector.X * _dashForce) + (vecForward * _movementVector.Y * _dashForce) + (GetActorUpVector() * _dashVerticalLift);
+
+				// Add the grounded/airbone multiplier
+				if (_movementComponent->IsFalling())
+					dashDirection *= _dashAirboneMultiplier;
+				else
+					dashDirection *= _dashGroundedMultiplier;
+
+				LaunchCharacter(dashDirection, true, true);
+
+				// Set a timer that will call RefillOneDash on _dashRestoreCooldown
+				FTimerHandle tHandle;
+				GetWorldTimerManager().SetTimer(tHandle, this, &AMyTournamentCharacter::RefillOneDash, _dashRestoreCooldown, false);
+				_dashCurAvaiable--;
+
+				// Broadcast the event
+				_onDashIsUsedDelegate.Broadcast(_dashCurAvaiable);
+
+				if (_movementVector.Y >= 0.7f)
+				{
+					_characterAnimInstance->_bIsDashing = true;
+					_fpsAnimInstance->_bIsDashing = true;
+				}
 			}
 		}
 	}
@@ -251,7 +268,9 @@ void AMyTournamentCharacter::DetectRunnableWalls()
 		// Check should wallrun only if forward speed is high enough
 		if (forwardVelocity >= _wallRunMinVelocityStartup)
 		{
-			DrawDebugLine(GetWorld(), start, end, FColor::Red, false, 2.0f, 0, 1.0f);
+			if(_wallRunDebugEnabled)
+				DrawDebugLine(GetWorld(), start, end, FColor::Red, false, 2.0f, 0, 1.0f);
+
 			if (_movementVector.X >= _wallRunInputThreshold && GetWorld()->LineTraceSingleByChannel(hitRes, start, end, ECollisionChannel::ECC_Visibility, collParams))
 			{
 				AActor* hitActor = hitRes.GetActor();
@@ -259,7 +278,9 @@ void AMyTournamentCharacter::DetectRunnableWalls()
 				// Check if it's the right tag
 				if (hitActor->ActorHasTag("WallRunnable") && (_wallRunLastWall == nullptr || (_wallRunLastWall != nullptr && _wallRunLastWall != hitActor))) // check if this wall is different from last wall, since we give the player one jump when he wallruns he could wallrun infinitely without this
 				{
-					GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("Right wall run!"));
+					if (_wallRunDebugEnabled)
+						GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("Right wall run!"));
+
 					shouldWallrun = true;
 					shouldWallrunRight = true;
 
@@ -273,7 +294,9 @@ void AMyTournamentCharacter::DetectRunnableWalls()
 				hitRes.Reset(1.f, false);
 				end = start + (-_cameraComponent->GetRightVector() * _wallRunCheckVectorLength);
 
-				DrawDebugLine(GetWorld(), start, end, FColor::Magenta, false, 2.0f, 0, 1.0f);
+				if (_wallRunDebugEnabled)
+					DrawDebugLine(GetWorld(), start, end, FColor::Magenta, false, 2.0f, 0, 1.0f);
+
 				if (_movementVector.X <= -_wallRunInputThreshold && GetWorld()->LineTraceSingleByChannel(hitRes, start, end, ECollisionChannel::ECC_Visibility, collParams))
 				{
 					AActor* hitActor = hitRes.GetActor();
@@ -281,7 +304,9 @@ void AMyTournamentCharacter::DetectRunnableWalls()
 					// Check if it's the right tag
 					if (hitActor->ActorHasTag("WallRunnable") && (_wallRunLastWall == nullptr || (_wallRunLastWall != nullptr && _wallRunLastWall != hitActor)))
 					{
-						GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("Left wall run!"));
+						if (_wallRunDebugEnabled)
+							GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("Left wall run!"));
+
 						shouldWallrun = true;
 						shouldWallrunRight = false;
 
@@ -321,7 +346,6 @@ void AMyTournamentCharacter::StartWallRun(bool isRight, AActor* curWall)
 void AMyTournamentCharacter::HandleWallRunMovements(float deltaTime)
 {
 	_wallRunTimeWallRunning += 1 * deltaTime;
-	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("WallTime: ") + FString::SanitizeFloat(_wallRunTimeWallRunning));
 
 	// Check if the character hits the ground, if so, stop the wall run
 	if (!_movementComponent->IsFalling())
@@ -338,11 +362,14 @@ void AMyTournamentCharacter::HandleWallRunMovements(float deltaTime)
 	FCollisionQueryParams obstacleCheckCollParams;
 	obstacleCheckCollParams.AddIgnoredActor(this);
 
-	DrawDebugLine(GetWorld(), obstacleCheckStart, obstacleCheckEnd, FColor::Blue, false, 2.0f, 0, 1.0f);
+	if (_wallRunDebugEnabled)
+		DrawDebugLine(GetWorld(), obstacleCheckStart, obstacleCheckEnd, FColor::Blue, false, 2.0f, 0, 1.0f);
 
 	if (GetWorld()->LineTraceSingleByChannel(obstacleHitRes, obstacleCheckStart, obstacleCheckEnd, ECollisionChannel::ECC_Visibility, obstacleCheckCollParams))
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("Hit something! ") + FString(obstacleHitRes.GetActor()->GetActorNameOrLabel()));
+		if (_wallRunDebugEnabled)
+			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("Hit something! ") + FString(obstacleHitRes.GetActor()->GetActorNameOrLabel()));
+
 		EndWallRun();
 		return;
 	}
@@ -376,7 +403,8 @@ void AMyTournamentCharacter::HandleWallRunMovements(float deltaTime)
 	collParams.AddIgnoredActor(this);
 
 	// Debug the trace
-	DrawDebugLine(GetWorld(), start, end, FColor::Green, false, 3.0f, 0, 1.0f);
+	if (_wallRunDebugEnabled)
+		DrawDebugLine(GetWorld(), start, end, FColor::Green, false, 3.0f, 0, 1.0f);
 
 	// Check if we're still attached to the wall (if the player looks away, this will fail, so the 'else' will correctly deatach him from the wall)
 	if (GetWorld()->LineTraceSingleByChannel(hitRes, start, end, ECollisionChannel::ECC_Visibility, collParams))
@@ -389,7 +417,8 @@ void AMyTournamentCharacter::HandleWallRunMovements(float deltaTime)
 			_wallRunCurWallImpactPoint = hitRes.ImpactPoint;
 
 			// Draw wall normal (red)
-			DrawDebugLine(GetWorld(), _wallRunCurWallImpactPoint, _wallRunCurWallImpactPoint + _wallRunCurWallNormal * 200.0f, FColor::Red, false, 3.0f, 0, 2.0f);
+			if (_wallRunDebugEnabled)
+				DrawDebugLine(GetWorld(), _wallRunCurWallImpactPoint, _wallRunCurWallImpactPoint + _wallRunCurWallNormal * 200.0f, FColor::Red, false, 3.0f, 0, 2.0f);
 
 			// Compute the local tangent to get the direction to run along the surface
 			FVector forward = GetActorForwardVector();
@@ -404,7 +433,8 @@ void AMyTournamentCharacter::HandleWallRunMovements(float deltaTime)
 					tangent *= -1.0f;
 
 				// Draw the tangent
-				DrawDebugDirectionalArrow(GetWorld(), _wallRunCurWallImpactPoint, _wallRunCurWallImpactPoint + tangent * 200.0f, 30.0f, FColor::Cyan, false, 3, 0, 2.0f);
+				if (_wallRunDebugEnabled)
+					DrawDebugDirectionalArrow(GetWorld(), _wallRunCurWallImpactPoint, _wallRunCurWallImpactPoint + tangent * 200.0f, 30.0f, FColor::Cyan, false, 3, 0, 2.0f);
 
 				// Set velocity along the tangent: this forces the player to follow the local curvature
 				FVector newVel = tangent * _wallRunSpeed;
@@ -449,6 +479,20 @@ void AMyTournamentCharacter::UpdateCameraTilt(float deltaTime)
 	_cameraHolder->SetRelativeRotation(CurrentRotation);
 }
 
+void AMyTournamentCharacter::CustomCrouchToggle()
+{
+	if (!IsCrouched() && !_movementComponent->IsFalling())
+	{
+		Crouch();
+	}
+	else
+	{
+		UnCrouch();
+	}
+}
+
+
+// Blueprints
 bool AMyTournamentCharacter::BPF_IsWallRunning()
 {
 	return _wallRunIsWallRunning;
