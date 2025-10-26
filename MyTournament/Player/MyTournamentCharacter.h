@@ -9,6 +9,7 @@
 #include "EnhancedInputSubsystems.h" 
 #include "InputActionValue.h"
 #include "Camera/CameraComponent.h"
+#include "../Actors/Components/EntityVitalsComponent.h"
 #include "MyTournamentCharacter.generated.h"
 
 class UInputMappingContext;
@@ -124,6 +125,10 @@ protected:
 	TSubclassOf<UMyTournamentUI> _myTournamentUIClass;
 
 	TObjectPtr<UMyTournamentUI> _myTournamentUI;
+
+	// Vitals
+	UPROPERTY(VisibleAnywhere, Category = "Vitals")
+	TObjectPtr<UEntityVitalsComponent> _vitalsComponent;
 
 	// WallRunning
 	// - Settings
@@ -251,5 +256,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	bool BPF_IsWallRunningRight();
+
+	// Getters
+	UFUNCTION(BlueprintPure, Category = "Vitals")
+	UEntityVitalsComponent* GetVitalsComponent() const { return _vitalsComponent; }
 };
 

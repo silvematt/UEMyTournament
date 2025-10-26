@@ -39,6 +39,9 @@ AMyTournamentCharacter::AMyTournamentCharacter()
 
 	// Make sure that rotating the character rotates the camera
 	_cameraComponent->bUsePawnControlRotation = false;
+
+	// Create the Vitals component
+	_vitalsComponent = CreateDefaultSubobject<UEntityVitalsComponent>(TEXT("Vitals"));
 }
 
 // Called when the game starts or when spawned

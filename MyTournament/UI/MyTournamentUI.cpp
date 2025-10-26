@@ -11,11 +11,6 @@ void UMyTournamentUI::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	if (_txtHPValue)
-	{
-		_txtHPValue->SetText(FText::FromString("OVERRIDE"));
-	}
-
 	AMyTournamentCharacter* myCharacter = Cast<AMyTournamentCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 
 	// Bind to delegates
@@ -24,8 +19,19 @@ void UMyTournamentUI::NativeConstruct()
 	{
 		myCharacter->_onDashIsUsedDelegate.AddUniqueDynamic(this, &UMyTournamentUI::HandleDashChange);
 		myCharacter->_onDashIsRefilledDelegate.AddUniqueDynamic(this, &UMyTournamentUI::HandleDashChange);
+
+		_playerVitals = myCharacter->GetVitalsComponent();
+
+		if (_playerVitals)
+		{
+			_playerVitals->_onVitalsChange.AddUniqueDynamic(this, &UMyTournamentUI::HandleOnVitalsChange);
+
+			// Do one update
+			HandleOnVitalsChange(_playerVitals->GetCurrentHealth(), _playerVitals->GetCurrentArmor());
+		}
 	}
 }
+
 void UMyTournamentUI::HandleDashChange(int curDashAvailable)
 {
 	switch (curDashAvailable)
@@ -48,4 +54,10 @@ void UMyTournamentUI::HandleDashChange(int curDashAvailable)
 		default:
 			break;
 	}
+}
+
+void UMyTournamentUI::HandleOnVitalsChange(float newHP, float newArmor)
+{
+	_txtHPValue->SetText(FText::AsNumber(FMath::RoundToInt(newHP)));
+	_txtArmorValue->SetText(FText::AsNumber(FMath::RoundToInt(newArmor)));
 }

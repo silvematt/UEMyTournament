@@ -8,6 +8,7 @@
 
 class UTextBlock;
 class UProgressBar;
+class UEntityVitalsComponent;
 
 /**
  * 
@@ -19,8 +20,12 @@ class MYTOURNAMENT_API UMyTournamentUI : public UUserWidget
 
 // Properties
 protected:
+	// UI
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* _txtHPValue;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* _txtArmorValue;
 
 	UPROPERTY(meta = (BindWidget))
 	UProgressBar* _dashBarOne;
@@ -28,10 +33,17 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	UProgressBar* _dashBarTwo;
 
+	// Other
+	UPROPERTY(VisibleDefaultsOnly)
+	TObjectPtr<UEntityVitalsComponent> _playerVitals;
+
 // Methods
 protected:
 	void NativeConstruct() override;
 
 	UFUNCTION()
 	void HandleDashChange(int curDashAvailable);
+
+	UFUNCTION()
+	void HandleOnVitalsChange(float newHP, float newArmor);
 };
