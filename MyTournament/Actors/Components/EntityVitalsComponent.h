@@ -45,28 +45,33 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	UFUNCTION(BlueprintCallable, BlueprintPure)
 	float GetCurrentHealth() { return _currentHealth; }
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
 	float GetCurrentArmor() { return _currentArmor; }
 
+	UFUNCTION(BlueprintCallable, BlueprintPure)
 	float GetMaxHealth() { return _maxHealth; }
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
 	float GetMaxAmor() { return _maxArmor; }
 
 	// IDamageable
-	UFUNCTION()
-	void ApplyDamage(float dmgAmount) override;
+	void ApplyDamage_Implementation(float dmgAmount) override;
 
 	UFUNCTION()
-	void AddHealth(float hpAmount) override;
+	void AddHealth_Implementation(float hpAmount) override;
 
 	UFUNCTION()
-	void AddArmor(float armorAmount) override;
+	void AddArmor_Implementation(float armorAmount) override;
 
 	UFUNCTION()
-	bool IsAlive() override;
+	bool IsAlive_Implementation() const override;
 
 	UFUNCTION()
-	bool IsAtMaxHealth() override;
+	bool IsAtMaxHealth_Implementation() const override;
 
 	UFUNCTION() 
-	bool IsAtMaxArmor() override;
+	bool IsAtMaxArmor_Implementation() const override;
 };

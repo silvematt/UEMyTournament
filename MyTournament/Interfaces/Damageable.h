@@ -7,7 +7,7 @@
 #include "Damageable.generated.h"
 
 // This class does not need to be modified.
-UINTERFACE(MinimalAPI)
+UINTERFACE(MinimalAPI, BlueprintType)
 class UDamageable : public UInterface
 {
 	GENERATED_BODY()
@@ -22,21 +22,21 @@ class MYTOURNAMENT_API IDamageable
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	UFUNCTION()
-	virtual void ApplyDamage(float dmgApplied) = 0;
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	void ApplyDamage(float dmgApplied);
 
-	UFUNCTION()
-	virtual void AddHealth(float hpAmount) = 0;
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	void AddHealth(float hpAmount);
 
-	UFUNCTION()
-	virtual void AddArmor(float armorAmount) = 0;
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	void AddArmor(float armorAmount);
 
-	UFUNCTION()
-	virtual bool IsAlive() = 0;
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	bool IsAlive() const;
 
-	UFUNCTION()
-	virtual bool IsAtMaxHealth() = 0;
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	bool IsAtMaxHealth() const;
 
-	UFUNCTION()
-	virtual bool IsAtMaxArmor() = 0;
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	bool IsAtMaxArmor() const;
 };

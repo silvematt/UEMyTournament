@@ -35,7 +35,7 @@ void UEntityVitalsComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	// ...
 }
 
-void UEntityVitalsComponent::ApplyDamage(float dmgAmount)
+void UEntityVitalsComponent::ApplyDamage_Implementation(float dmgAmount)
 {
 	if (dmgAmount <= 0.0f)
 		return;
@@ -49,31 +49,31 @@ void UEntityVitalsComponent::ApplyDamage(float dmgAmount)
 	_onVitalsChange.Broadcast(_currentHealth, _currentArmor);
 }
 
-void UEntityVitalsComponent::AddHealth(float hpAmount)
+void UEntityVitalsComponent::AddHealth_Implementation(float hpAmount)
 {
 	_currentHealth = FMath::Clamp(_currentHealth + hpAmount, 0.0f, _maxHealth);
 
 	_onVitalsChange.Broadcast(_currentHealth, _currentArmor);
 }
 
-void UEntityVitalsComponent::AddArmor(float armorAmount)
+void UEntityVitalsComponent::AddArmor_Implementation(float armorAmount)
 {
 	_currentArmor = FMath::Clamp(_currentArmor + armorAmount, 0.0f, _maxArmor);
 
 	_onVitalsChange.Broadcast(_currentHealth, _currentArmor);
 }
 
-bool UEntityVitalsComponent::IsAlive()
+bool UEntityVitalsComponent::IsAlive_Implementation() const
 {
 	return _currentHealth >= 0.0f;
 }
 
-bool UEntityVitalsComponent::IsAtMaxHealth()
+bool UEntityVitalsComponent::IsAtMaxHealth_Implementation() const
 {
 	return _currentHealth >= _maxHealth;
 }
 
-bool UEntityVitalsComponent::IsAtMaxArmor()
+bool UEntityVitalsComponent::IsAtMaxArmor_Implementation() const
 {
 	return _currentArmor >= _maxArmor;
 }
