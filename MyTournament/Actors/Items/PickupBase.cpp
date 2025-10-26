@@ -110,7 +110,11 @@ void APickupBase::OnMeshBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor
 
 void APickupBase::TakePickup(AActor* taker)
 {
-
+	// Apply effects to actor
+	for (int i = 0; i < _itemAsset->_effects.Num(); i++)
+	{
+		_itemAsset->_effects[i]->ApplyTo(taker);
+	}
 }
 
 void APickupBase::RespawnPickup()
