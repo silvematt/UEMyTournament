@@ -2,6 +2,7 @@
 
 
 #include "PickupBase.h"
+#include "Components/AudioComponent.h"
 #include "../../Data/Items/ItemAsset.h"
 
 // Sets default values
@@ -21,6 +22,10 @@ APickupBase::APickupBase()
 	_glowMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("GlowMesh"));
 	check(_glowMesh != nullptr);
 	_glowMesh->SetupAttachment(RootComponent);
+
+	_audioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
+	check(_audioComponent != nullptr);
+	_audioComponent->SetupAttachment(RootComponent);
 }
 
 // Called when the game starts or when spawned
@@ -31,6 +36,8 @@ void APickupBase::BeginPlay()
 	Initialize();
 	
 	_startMeshLocation = _mesh->GetComponentLocation();
+
+	_audioComponent->SetSound(_pickupSound);
 }
 
 // Called every frame
@@ -86,6 +93,12 @@ void APickupBase::OnMeshBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor
 	AMyTournamentCharacter* myChar = Cast<AMyTournamentCharacter>(OtherActor);
 	if (myChar)
 	{
+		// Checks for Pickup conditions (max health, max armor, etc.)
+		if (!CanBeTakenBy(OtherActor))
+		{
+			return;
+		}
+
 		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FString::Printf(TEXT("Player took pickup %s which is %s"), *GetName(), *_itemAsset->_ID.ToString()));
 
 		TakePickup(OtherActor);
@@ -110,6 +123,8 @@ void APickupBase::OnMeshBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor
 
 void APickupBase::TakePickup(AActor* taker)
 {
+	_audioComponent->Play();
+
 	// Apply effects to actor
 	for (int i = 0; i < _itemAsset->_effects.Num(); i++)
 	{
@@ -149,4 +164,27 @@ void APickupBase::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedE
 			_mesh->SetVisibility(true);
 		}
 	}
+}
+
+bool APickupBase::CanBeTakenBy(AActor* actor)
+{
+	if (_itemAsset->_pickupConditionsMask == 0)
+	{
+		return true;
+	}
+
+	// Check for vitals component, if it's there, check the conditions
+	if (UEntityVitalsComponent* vitals = actor->FindComponentByClass<UEntityVitalsComponent>())
+	{
+		if (_itemAsset->HasPickupCondition(EPickConditions::DoNotTake_OnHealthIsMax))
+			return !IDamageable::Execute_IsAtMaxHealth(vitals);
+
+		if (_itemAsset->HasPickupCondition(EPickConditions::DoNotTake_OnArmorIsMax))
+			return !IDamageable::Execute_IsAtMaxArmor(vitals);
+
+		if (_itemAsset->HasPickupCondition(EPickConditions::DoNotTake_OnBothHealthAndArmorIsMax))
+			return (!IDamageable::Execute_IsAtMaxHealth(vitals) || !IDamageable::Execute_IsAtMaxArmor(vitals));
+	}
+
+	return false;
 }

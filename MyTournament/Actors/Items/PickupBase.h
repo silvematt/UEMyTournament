@@ -61,6 +61,13 @@ private:
 	// Time that has been hovering
 	float _hoverTime = 0.0f;
 
+	// Audio
+	UPROPERTY(EditAnywhere, Category = "Pickup | Audio")
+	TObjectPtr<UAudioComponent> _audioComponent;
+
+	UPROPERTY(EditAnywhere, Category = "Pickup | Audio")
+	TObjectPtr<USoundBase> _pickupSound;
+
 public:	
 	// Sets default values for this actor's properties
 	APickupBase();
@@ -86,6 +93,9 @@ public:
 
 	UFUNCTION()
 	void RespawnPickup();
+
+	UFUNCTION()
+	bool CanBeTakenBy(AActor* actor);
 
 #if WITH_EDITOR
 	// Runs whenever a property on this object is changed in the editor

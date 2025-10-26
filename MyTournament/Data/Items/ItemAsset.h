@@ -8,6 +8,16 @@
 #include "PickupEffect.h"
 #include "ItemAsset.generated.h"
 
+UENUM(BlueprintType, meta = (Bitflags))
+enum class EPickConditions : uint8
+{
+	None									= 0 UMETA(Hidden),
+	DoNotTake_OnHealthIsMax					= 1 << 1,
+	DoNotTake_OnArmorIsMax					= 1 << 2,
+	DoNotTake_OnBothHealthAndArmorIsMax		= 1 << 3
+};
+ENUM_CLASS_FLAGS(EPickConditions)
+
 /**
  * 
  */
@@ -33,4 +43,12 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Effects")
 	TArray<TObjectPtr<UPickupEffect>> _effects;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pickup Conditions", meta = (Bitmask, BitmaskEnum = "EPickConditions"))
+	int32 _pickupConditionsMask = 0;
+
+public:
+	FORCEINLINE bool HasPickupCondition(EPickConditions Flag) const
+	{
+		return (_pickupConditionsMask & static_cast<int32>(Flag)) != 0;
+	}
 };
