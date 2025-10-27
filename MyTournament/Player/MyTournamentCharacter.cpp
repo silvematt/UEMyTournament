@@ -4,6 +4,8 @@
 #include "MyTournamentCharacter.h"
 #include "../UI/MyTournamentUI.h"
 #include "Animation/MyTournamentAnimInstance.h"
+#include "../Actors/Components/EntityVitalsComponent.h"
+#include "../Actors/Components/InventoryComponent.h"
 #include <Kismet/GameplayStatics.h>
 
 // Sets default values
@@ -42,6 +44,9 @@ AMyTournamentCharacter::AMyTournamentCharacter()
 
 	// Create the Vitals component
 	_vitalsComponent = CreateDefaultSubobject<UEntityVitalsComponent>(TEXT("Vitals"));
+
+	// Create the inventory component
+	_inventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory"));
 }
 
 // Called when the game starts or when spawned

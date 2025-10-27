@@ -13,7 +13,7 @@ enum class EItemType : uint8
 {
 	Consumable	UMETA(DisplayName = "Consumable"),
 	Powerup		UMETA(DisplayName = "Powerup"),
-	Ammo		UMETA(DisplayName = "Ammmo"),
+	Ammo		UMETA(DisplayName = "Ammo"),
 	Weapon		UMETA(DisplayName = "Weapon")
 };
 

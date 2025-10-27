@@ -6,6 +6,7 @@
 #include "Components/ProgressBar.h"
 #include <Kismet/GameplayStatics.h>
 #include "../Player/MyTournamentCharacter.h"
+#include "../Actors/Components/EntityVitalsComponent.h"
 
 void UMyTournamentUI::NativeConstruct()
 {

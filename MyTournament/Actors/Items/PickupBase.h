@@ -20,10 +20,10 @@ private:
 	UPROPERTY(EditInstanceOnly, Category = "Pickup | Base")
 	TSoftObjectPtr<UItemAsset> _itemAsset;
 
-	UPROPERTY(EditAnywhere, Category = "Pickup | Base")
+	UPROPERTY(VisibleDefaultsOnly, Category = "Pickup | Base")
 	TObjectPtr<UStaticMeshComponent> _mesh; // will have some sort of collider
 
-	UPROPERTY(EditAnywhere, Category = "Pickup | Glow")
+	UPROPERTY(VisibleDefaultsOnly, Category = "Pickup | Glow")
 	TObjectPtr<UStaticMeshComponent> _glowMesh; // will have some sort of collider
 
 	UPROPERTY(EditAnywhere, Category = "Pickup | Glow")

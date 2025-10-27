@@ -9,7 +9,6 @@
 #include "EnhancedInputSubsystems.h" 
 #include "InputActionValue.h"
 #include "Camera/CameraComponent.h"
-#include "../Actors/Components/EntityVitalsComponent.h"
 #include "MyTournamentCharacter.generated.h"
 
 class UInputMappingContext;
@@ -18,6 +17,8 @@ class UInputComponent;
 class UAnimBlueprint;
 class UMyTournamentUI;
 class UMyTournamentAnimInstance;
+class UEntityVitalsComponent;
+class UInventoryComponent;
 
 // Delegates
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDashIsUsedSignature, int, dashesNowAvailable);
@@ -185,7 +186,12 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "WallRun | State")
 	TObjectPtr<AActor> _wallRunLastWall; // last wall we ran on, while wallrunning it is the wall we're currently wallrunning
 
+	// Inventory
+	UPROPERTY(VisibleDefaultsOnly, Category = "Inventory")
+	TObjectPtr<UInventoryComponent> _inventoryComponent;
+
 public:
+	// Delegates
 	UPROPERTY(BlueprintAssignable)
 	FOnDashIsUsedSignature _onDashIsUsedDelegate;
 

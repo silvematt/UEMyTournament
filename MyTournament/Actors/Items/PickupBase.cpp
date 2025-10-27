@@ -4,6 +4,7 @@
 #include "PickupBase.h"
 #include "Components/AudioComponent.h"
 #include "../../Data/Items/ItemAsset.h"
+#include "../../Actors/Components/EntityVitalsComponent.h"
 
 // Sets default values
 APickupBase::APickupBase()
@@ -84,7 +85,8 @@ void APickupBase::Initialize()
 	_mesh->OnComponentBeginOverlap.AddDynamic(this, &APickupBase::OnMeshBeginOverlap);
 
 	// Set glowMesh default material
-	_glowMesh->SetMaterial(0, _glowMeshMaterialAvailable);
+	if(_glowMesh)
+		_glowMesh->SetMaterial(0, _glowMeshMaterialAvailable);
 }
 
 void APickupBase::OnMeshBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -114,9 +116,10 @@ void APickupBase::OnMeshBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor
 			GetWorldTimerManager().SetTimer(_respawnTimeHandle, this, &APickupBase::RespawnPickup, _respawnTime, false);
 
 			// Set glowMesh material
-			_glowMesh->SetMaterial(0, _glowMeshMaterialRespawning);
+			if (_glowMesh)
+				_glowMesh->SetMaterial(0, _glowMeshMaterialRespawning);
 		}
-		else
+		else if(_glowMesh)
 			_glowMesh->SetVisibility(false);
 	}
 }
@@ -139,7 +142,8 @@ void APickupBase::RespawnPickup()
 	_mesh->SetVisibility(true);
 
 	// Set glowMesh material
-	_glowMesh->SetMaterial(0, _glowMeshMaterialAvailable);
+	if (_glowMesh)
+		_glowMesh->SetMaterial(0, _glowMeshMaterialAvailable);
 }
 
 void APickupBase::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
@@ -176,13 +180,13 @@ bool APickupBase::CanBeTakenBy(AActor* actor)
 	// Check for vitals component, if it's there, check the conditions
 	if (UEntityVitalsComponent* vitals = actor->FindComponentByClass<UEntityVitalsComponent>())
 	{
-		if (_itemAsset->HasPickupCondition(EPickConditions::DoNotTake_OnHealthIsMax))
+		if (_itemAsset->HasPickupCondition(EPickupCondition::DoNotTake_OnHealthIsMax))
 			return !IDamageable::Execute_IsAtMaxHealth(vitals);
 
-		if (_itemAsset->HasPickupCondition(EPickConditions::DoNotTake_OnArmorIsMax))
+		if (_itemAsset->HasPickupCondition(EPickupCondition::DoNotTake_OnArmorIsMax))
 			return !IDamageable::Execute_IsAtMaxArmor(vitals);
 
-		if (_itemAsset->HasPickupCondition(EPickConditions::DoNotTake_OnBothHealthAndArmorIsMax))
+		if (_itemAsset->HasPickupCondition(EPickupCondition::DoNotTake_OnBothHealthAndArmorIsMax))
 			return (!IDamageable::Execute_IsAtMaxHealth(vitals) || !IDamageable::Execute_IsAtMaxArmor(vitals));
 	}
 

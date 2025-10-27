@@ -8,15 +8,16 @@
 #include "PickupEffect.h"
 #include "ItemAsset.generated.h"
 
-UENUM(BlueprintType, meta = (Bitflags))
-enum class EPickConditions : uint8
+UENUM(BlueprintType, meta = (Bitflags, UseEnumValuesAsMaskValuesInEditor = "true"))
+enum class EPickupCondition : uint8
 {
 	None									= 0 UMETA(Hidden),
-	DoNotTake_OnHealthIsMax					= 1 << 1,
-	DoNotTake_OnArmorIsMax					= 1 << 2,
-	DoNotTake_OnBothHealthAndArmorIsMax		= 1 << 3
+	DoNotTake_OnHealthIsMax					= 1 << 0,
+	DoNotTake_OnArmorIsMax					= 1 << 1,
+	DoNotTake_OnBothHealthAndArmorIsMax		= 1 << 2,
+	DoNotTake_OnAmmoTypeIsFull				= 1 << 3
 };
-ENUM_CLASS_FLAGS(EPickConditions)
+ENUM_CLASS_FLAGS(EPickupCondition)
 
 /**
  * 
@@ -40,14 +41,14 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Item Data")
 	TSoftObjectPtr<UStaticMesh> _meshPrimary;
 
-	UPROPERTY(EditAnywhere, Category = "Effects")
+	UPROPERTY(EditAnywhere, Category = "Pickup Data")
 	TArray<TObjectPtr<UPickupEffect>> _effects;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pickup Conditions", meta = (Bitmask, BitmaskEnum = "EPickConditions"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pickup Data", meta = (Bitmask, BitmaskEnum = "EPickupCondition"))
 	int32 _pickupConditionsMask = 0;
 
 public:
-	FORCEINLINE bool HasPickupCondition(EPickConditions Flag) const
+	FORCEINLINE bool HasPickupCondition(EPickupCondition Flag) const
 	{
 		return (_pickupConditionsMask & static_cast<int32>(Flag)) != 0;
 	}
