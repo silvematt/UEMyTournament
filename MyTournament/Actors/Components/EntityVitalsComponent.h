@@ -42,6 +42,9 @@ public:
 	FOnDamageIsAppliedSignature _onVitalsChange;
 
 public:	
+
+	void CustomInitialize();
+
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 

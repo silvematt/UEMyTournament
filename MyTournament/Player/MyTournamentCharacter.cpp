@@ -6,6 +6,7 @@
 #include "Animation/MyTournamentAnimInstance.h"
 #include "../Actors/Components/EntityVitalsComponent.h"
 #include "../Actors/Components/InventoryComponent.h"
+#include "../Actors/Items/WeaponInstance.h"
 #include <Kismet/GameplayStatics.h>
 
 // Sets default values
@@ -43,10 +44,10 @@ AMyTournamentCharacter::AMyTournamentCharacter()
 	_cameraComponent->bUsePawnControlRotation = false;
 
 	// Create the Vitals component
-	_vitalsComponent = CreateDefaultSubobject<UEntityVitalsComponent>(TEXT("Vitals"));
+	_vitalsComponent = CreateDefaultSubobject<UEntityVitalsComponent>(TEXT("VitalsComponent"));
 
 	// Create the inventory component
-	_inventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory"));
+	_inventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 }
 
 // Called when the game starts or when spawned
@@ -80,6 +81,15 @@ void AMyTournamentCharacter::BeginPlay()
 	_myTournamentUI = CreateWidget<UMyTournamentUI>(UGameplayStatics::GetPlayerController(GetWorld(), 0), _myTournamentUIClass);
 	_myTournamentUI->AddToViewport(0);
 	_myTournamentUI->SetOwningPlayer(playerController);
+
+	// Set weapon callback
+	_inventoryComponent->_onWeaponIsEquippedDelegate.AddUniqueDynamic(this, &AMyTournamentCharacter::OnWeaponIsEquipped);
+
+	// Custom Initialize components
+	// Begin Play order can vary, so this ensures proper initialization of components
+	_vitalsComponent->CustomInitialize();
+	_myTournamentUI->CustomInitialize();
+	_inventoryComponent->CustomInitialize();
 
 	GEngine->AddOnScreenDebugMessage(-1, 2.5f, FColor::Yellow, TEXT("MyTournamentCharacter initialized!"));
 }
@@ -499,6 +509,18 @@ void AMyTournamentCharacter::CustomCrouchToggle()
 	}
 }
 
+void AMyTournamentCharacter::OnWeaponIsEquipped(const FWeaponInInventoryEntry& weaponEntry)
+{
+	// Attach the weapon instance to the fpsHands component
+	FAttachmentTransformRules attachmentRules(EAttachmentRule::SnapToTarget, true);
+	weaponEntry._instance->AttachToComponent(_fpsMesh, attachmentRules, FName(TEXT("HandGrip_R")));
+	weaponEntry._instance->_skeletalMesh->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::FirstPerson; // flag the weapon instance as a FirstPerson mesh
+
+	// Update Anims
+	_fpsMesh->SetAnimInstanceClass(weaponEntry._instance->_fpsAnimBlueprint->GeneratedClass);
+	GetMesh()->SetAnimInstanceClass(weaponEntry._instance->_tpsAnimBlueprint->GeneratedClass);
+
+}
 
 // Blueprints
 bool AMyTournamentCharacter::BPF_IsWallRunning()

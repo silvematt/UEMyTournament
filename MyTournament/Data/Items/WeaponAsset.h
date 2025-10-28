@@ -7,6 +7,8 @@
 #include "Weapons/AmmoType.h"
 #include "WeaponAsset.generated.h"
 
+class AWeaponInstance;
+
 UENUM(BlueprintType)
 enum class EWeaponSlot : uint8
 {
@@ -35,6 +37,9 @@ class MYTOURNAMENT_API UWeaponAsset : public UItemAsset
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon | Core")
 	EWeaponSlot _weaponSlot = EWeaponSlot::Slot1;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon | Core")
+	TSubclassOf<AWeaponInstance> _weaponActor;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon | Core")
 	EFireMode _fireMode = EFireMode::Single;

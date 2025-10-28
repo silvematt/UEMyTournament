@@ -19,13 +19,16 @@ void UEntityVitalsComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
+}
+
+void UEntityVitalsComponent::CustomInitialize()
+{
 	// Initialize Current Health
 	_currentHealth = _maxHealth / 2.0f;
 	_currentArmor = _maxArmor / 2.0f;
-	
+
 	_onVitalsChange.Broadcast(_currentHealth, _currentArmor);
 }
-
 
 // Called every frame
 void UEntityVitalsComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)

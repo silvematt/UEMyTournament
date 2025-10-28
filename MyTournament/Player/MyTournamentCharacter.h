@@ -19,6 +19,7 @@ class UMyTournamentUI;
 class UMyTournamentAnimInstance;
 class UEntityVitalsComponent;
 class UInventoryComponent;
+struct FWeaponInInventoryEntry;
 
 // Delegates
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDashIsUsedSignature, int, dashesNowAvailable);
@@ -81,7 +82,7 @@ protected:
 	// Components
 
 	// - Camera
-	UPROPERTY(VisibleAnywhere, Category = "Camera")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	TObjectPtr<UCameraComponent> _cameraComponent;
 
 	UPROPERTY(EditAnywhere, Category = Camera)
@@ -114,7 +115,7 @@ protected:
 	TObjectPtr<UAnimBlueprint> _tpsDefaultAnim;
 
 	// - Mesh
-	UPROPERTY(VisibleAnywhere, Category = "First Person")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "First Person")
 	TObjectPtr<USkeletalMeshComponent> _fpsMesh;
 
 	// - Character Component (inerithed)
@@ -255,6 +256,9 @@ public:
 
 	UFUNCTION()
 	void CustomCrouchToggle();
+
+	UFUNCTION()
+	void OnWeaponIsEquipped(const FWeaponInInventoryEntry& weaponEntry);
 
 	// Blueprint
 	UFUNCTION(BlueprintCallable, BlueprintPure)

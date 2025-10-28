@@ -46,4 +46,8 @@ protected:
 
 	UFUNCTION()
 	void HandleOnVitalsChange(float newHP, float newArmor);
+
+public:
+	UFUNCTION()
+	void CustomInitialize();
 };

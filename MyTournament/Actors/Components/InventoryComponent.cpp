@@ -2,6 +2,7 @@
 
 
 #include "InventoryComponent.h"
+#include "../Items/WeaponInstance.h"
 
 // Sets default values for this component's properties
 UInventoryComponent::UInventoryComponent()
@@ -13,18 +14,20 @@ UInventoryComponent::UInventoryComponent()
 	// ...
 }
 
+void UInventoryComponent::CustomInitialize()
+{
+	// Intialize
+	if (_defaultWeapon)
+	{
+		TryAddWeapon(_defaultWeapon);
+	}
+}
 
 // Called when the game starts
 void UInventoryComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Intialize
-	if (_defaultWeapon)
-	{
-		TryAddWeapon(_defaultWeapon);
-	}
-	
 }
 
 
@@ -53,6 +56,7 @@ bool UInventoryComponent::TryAddWeapon(UWeaponAsset* weaponToAdd)
 		else if (GetCurrentWeaponAmmoCount() == 0)
 			TryEquip(weaponToAdd->_weaponSlot);
 
+		_onWeaponIsAddedDelegate.Broadcast(weaponToAdd);
 		return true;
 	}
 	else
@@ -61,7 +65,14 @@ bool UInventoryComponent::TryAddWeapon(UWeaponAsset* weaponToAdd)
 
 bool UInventoryComponent::TryEquip(EWeaponSlot slot)
 {
+	_weapons[slot]._instance = GetWorld()->SpawnActor<AWeaponInstance>(_weapons[slot]._asset->_weaponActor, this->GetOwner()->GetTransform());
+	_weapons[slot]._instance->SetWeaponOwner(this->GetOwner());
 
+	// Attach to owner
+	FAttachmentTransformRules attachmentRules(EAttachmentRule::SnapToTarget, true);
+	_weapons[slot]._instance->AttachToActor(_weapons[slot]._instance->GetWeaponOwner(), attachmentRules);
+
+	_onWeaponIsEquippedDelegate.Broadcast(_weapons[slot]);
 	return false;
 }
 

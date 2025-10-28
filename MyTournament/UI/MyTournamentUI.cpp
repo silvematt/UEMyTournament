@@ -11,7 +11,11 @@
 void UMyTournamentUI::NativeConstruct()
 {
 	Super::NativeConstruct();
+	
+}
 
+void UMyTournamentUI::CustomInitialize()
+{
 	AMyTournamentCharacter* myCharacter = Cast<AMyTournamentCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 
 	// Bind to delegates
@@ -31,6 +35,7 @@ void UMyTournamentUI::NativeConstruct()
 			HandleOnVitalsChange(_playerVitals->GetCurrentHealth(), _playerVitals->GetCurrentArmor());
 		}
 	}
+
 }
 
 void UMyTournamentUI::HandleDashChange(int curDashAvailable)

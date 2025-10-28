@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -9,7 +9,6 @@
 
 class AWeaponInstance;
 
-// WeaponEntry can be useful to 
 USTRUCT(BlueprintType)
 struct FWeaponInInventoryEntry
 {
@@ -25,6 +24,12 @@ struct FWeaponInInventoryEntry
 	UPROPERTY()
 	TObjectPtr<AWeaponInstance> _instance;
 };
+
+
+// Delegates
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponIsAddedSignature, UWeaponAsset*, weaponAdded);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponIsEquippedSignature, const FWeaponInInventoryEntry&, weaponEntryEquipped);
+
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class MYTOURNAMENT_API UInventoryComponent : public UActorComponent
@@ -50,11 +55,18 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	TMap<TObjectPtr<UAmmoType>, int32> _ammo;
 
+// Delegates
+public:
+	FOnWeaponIsAddedSignature _onWeaponIsAddedDelegate;
+	FOnWeaponIsEquippedSignature _onWeaponIsEquippedDelegate;
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
 public:	
+	void CustomInitialize();
+
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
