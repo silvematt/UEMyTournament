@@ -28,10 +28,9 @@ void UInventoryComponent::CustomInitialize()
 	// Intialize
 	if (_defaultWeapon)
 	{
-		TryAddWeapon(_defaultWeapon);
+		//TryAddWeapon(_defaultWeapon);
 	}
 }
-
 
 // Called every frame
 void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -41,28 +40,48 @@ void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 	// ...
 }
 
-bool UInventoryComponent::TryAddWeapon(UWeaponAsset* weaponToAdd)
+bool UInventoryComponent::TryAddWeapon(UWeaponAsset* weaponToAdd, bool addAmmo, int ammoCount)
 {
 	if (!weaponToAdd) 
 		return false;
 
-	// Check if the weapon isn't already added
+	// Check if the weapon was never added to the inventory, in case, add it
 	if (!_weapons.Contains(weaponToAdd->_weaponSlot))
-	{
 		_weapons.Add(weaponToAdd->_weaponSlot, FWeaponInInventoryEntry(weaponToAdd));
 
-		// If no weapon was equipped, equip this one
-		if (_currentWeaponSlot == EWeaponSlot::Slot0)
-			TryEquip(weaponToAdd->_weaponSlot);
-		// Otherwise if the currently equipped weapon has no ammo, equip the new one
-		else if (GetCurrentWeaponAmmoCount() == 0)
-			TryEquip(weaponToAdd->_weaponSlot);
+	// If no weapon was equipped, equip this one
+	if (_currentWeaponSlot == EWeaponSlot::Slot0)
+		TryEquip(weaponToAdd->_weaponSlot);
+	// Otherwise if the currently equipped weapon has no ammo, equip this new one
+	else if (GetCurrentWeaponAmmoCount() == 0)
+		TryEquip(weaponToAdd->_weaponSlot);
 
-		_onWeaponIsAddedDelegate.Broadcast(weaponToAdd);
-		return true;
-	}
-	else // maybe just add ammo?
+	_onWeaponIsAddedDelegate.Broadcast(weaponToAdd);
+
+	if (addAmmo)
+		TryAddAmmo(weaponToAdd->_ammoType, ammoCount);
+
+	return true;
+}
+
+bool UInventoryComponent::TryAddAmmo(UAmmoType* ammoToAdd, int ammoCount)
+{
+	if (!ammoToAdd)
 		return false;
+
+	// Check if the ammo type was never added to the inventory, in case, add it
+	if (!_ammo.Contains(ammoToAdd))
+		_ammo.Add(ammoToAdd, 0);
+
+	// Check if it's already max ammo
+	if (_ammo[ammoToAdd] >= ammoToAdd->_maxCapacity)
+		return false;
+
+	// Add ammo count
+	_ammo[ammoToAdd] = FMath::Clamp(_ammo[ammoToAdd] + ammoCount, 0, ammoToAdd->_maxCapacity);
+
+	_onAmmoIsAddedDelegate.Broadcast(ammoToAdd);
+	return true;
 }
 
 bool UInventoryComponent::TryEquip(EWeaponSlot slot)

@@ -29,6 +29,8 @@ struct FWeaponInInventoryEntry
 // Delegates
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponIsAddedSignature, UWeaponAsset*, weaponAdded);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponIsEquippedSignature, const FWeaponInInventoryEntry&, weaponEntryEquipped);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAmmoIsAddedSignature, UAmmoType*, ammoType);
+
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -53,12 +55,13 @@ protected:
 	TMap<EWeaponSlot, FWeaponInInventoryEntry> _weapons;
 
 	UPROPERTY(VisibleAnywhere)
-	TMap<TObjectPtr<UAmmoType>, int32> _ammo;
+	TMap<TObjectPtr<UAmmoType>, uint32> _ammo;
 
 // Delegates
 public:
 	FOnWeaponIsAddedSignature _onWeaponIsAddedDelegate;
 	FOnWeaponIsEquippedSignature _onWeaponIsEquippedDelegate;
+	FOnAmmoIsAddedSignature _onAmmoIsAddedDelegate;
 
 protected:
 	// Called when the game starts
@@ -74,7 +77,10 @@ public:
 
 	// Tries to add the weapon, this can fail if weapon is already in this inventory and ammo is maxed out
 	UFUNCTION()
-	bool TryAddWeapon(UWeaponAsset* weaponToAdd);
+	bool TryAddWeapon(UWeaponAsset* weaponToAdd, bool addAmmo, int ammoCount);
+
+	UFUNCTION()
+	bool TryAddAmmo(UAmmoType* ammoToAdd, int ammoCount);
 
 	// Tries to spawn/enable the weapon instance
 	UFUNCTION()
