@@ -21,16 +21,16 @@ private:
 	TSoftObjectPtr<UItemAsset> _itemAsset;
 
 	UPROPERTY(VisibleDefaultsOnly, Category = "Pickup | Base")
-	TObjectPtr<UStaticMeshComponent> _mesh; // will have some sort of collider
+	TObjectPtr<UStaticMeshComponent> _mesh; // will have some sort of collider and determine the pickup collision
 
 	UPROPERTY(VisibleDefaultsOnly, Category = "Pickup | Glow")
-	TObjectPtr<UStaticMeshComponent> _glowMesh; // will have some sort of collider
+	TObjectPtr<UStaticMeshComponent> _glowMesh;
 
 	UPROPERTY(EditAnywhere, Category = "Pickup | Glow")
-	TObjectPtr<UMaterialInstance> _glowMeshMaterialAvailable; // will have some sort of collider
+	TObjectPtr<UMaterialInstance> _glowMeshMaterialAvailable;
 
 	UPROPERTY(EditAnywhere, Category = "Pickup | Glow")
-	TObjectPtr<UMaterialInstance> _glowMeshMaterialRespawning; // will have some sort of collider
+	TObjectPtr<UMaterialInstance> _glowMeshMaterialRespawning;
 
 	UPROPERTY(EditAnywhere, Category = "Pickup | Base")
 	bool _doesRespawn = true;

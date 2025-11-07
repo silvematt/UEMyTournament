@@ -35,30 +35,6 @@ void APickupBase::BeginPlay()
 	Super::BeginPlay();
 
 	Initialize();
-	
-	_startMeshLocation = _mesh->GetComponentLocation();
-
-	_audioComponent->SetSound(_pickupSound);
-}
-
-// Called every frame
-void APickupBase::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-	if (_doesRotate)
-		_mesh->AddWorldRotation(FQuat(FVector(0, 0, 1), _rotSpeed * DeltaTime));
-
-	if (_doesHover)
-	{
-		_hoverTime += DeltaTime;
-
-		// Sinusoidal offset on Z
-		const float zOffset = _hoverRange * FMath::Sin(2.f * PI * _hoverSpeed * _hoverTime);
-
-		// Set absolute position from the stored start position (prevents drift)
-		_mesh->SetWorldLocation(_startMeshLocation + FVector(0.f, 0.f, zOffset));
-	}
 }
 
 void APickupBase::Initialize()
@@ -87,6 +63,30 @@ void APickupBase::Initialize()
 	// Set glowMesh default material
 	if(_glowMesh)
 		_glowMesh->SetMaterial(0, _glowMeshMaterialAvailable);
+
+	_startMeshLocation = _mesh->GetComponentLocation();
+
+	_audioComponent->SetSound(_pickupSound);
+}
+
+// Called every frame
+void APickupBase::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (_doesRotate)
+		_mesh->AddWorldRotation(FQuat(FVector(0, 0, 1), _rotSpeed * DeltaTime));
+
+	if (_doesHover)
+	{
+		_hoverTime += DeltaTime;
+
+		// Sinusoidal offset on Z
+		const float zOffset = _hoverRange * FMath::Sin(2.f * PI * _hoverSpeed * _hoverTime);
+
+		// Set absolute position from the stored start position (prevents drift)
+		_mesh->SetWorldLocation(_startMeshLocation + FVector(0.f, 0.f, zOffset));
+	}
 }
 
 void APickupBase::OnMeshBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -189,6 +189,6 @@ bool APickupBase::CanBeTakenBy(AActor* actor)
 		if (_itemAsset->HasPickupCondition(EPickupCondition::DoNotTake_OnBothHealthAndArmorIsMax))
 			return (!IDamageable::Execute_IsAtMaxHealth(vitals) || !IDamageable::Execute_IsAtMaxArmor(vitals));
 	}
-
+	
 	return false;
 }

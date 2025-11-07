@@ -65,16 +65,21 @@ protected:
 	virtual void BeginPlay() override;
 
 public:	
+	// CustomInitialize is called by the owner of this component (like the player)
+	UFUNCTION()
 	void CustomInitialize();
 
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	// Tries to add the weapon, this can fail if weapon is already in this inventory and ammo is maxed out
+	UFUNCTION()
 	bool TryAddWeapon(UWeaponAsset* weaponToAdd);
 
 	// Tries to spawn/enable the weapon instance
+	UFUNCTION()
 	bool TryEquip(EWeaponSlot slot);
 
+	UFUNCTION()
 	int32 GetCurrentWeaponAmmoCount() const;
 };

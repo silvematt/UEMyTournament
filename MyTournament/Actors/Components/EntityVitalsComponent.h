@@ -15,6 +15,10 @@ class MYTOURNAMENT_API UEntityVitalsComponent : public UActorComponent, public I
 {
 	GENERATED_BODY()
 
+public:
+	// Sets default values for this component's properties
+	UEntityVitalsComponent();
+
 // Properties
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Vitals")
@@ -29,10 +33,6 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Vitals")
 	float _maxArmor = 0.0f;
 
-public:	
-	// Sets default values for this component's properties
-	UEntityVitalsComponent();
-
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -42,7 +42,7 @@ public:
 	FOnDamageIsAppliedSignature _onVitalsChange;
 
 public:	
-
+	// CustomInitialize is called by the owner of this component (like the player)
 	void CustomInitialize();
 
 	// Called every frame
@@ -61,6 +61,7 @@ public:
 	float GetMaxAmor() { return _maxArmor; }
 
 	// IDamageable
+	UFUNCTION()
 	void ApplyDamage_Implementation(float dmgAmount) override;
 
 	UFUNCTION()

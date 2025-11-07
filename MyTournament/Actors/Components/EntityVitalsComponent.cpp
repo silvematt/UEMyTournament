@@ -21,6 +21,7 @@ void UEntityVitalsComponent::BeginPlay()
 
 }
 
+// CustomInitialize is called by the owner of this component (like the player)
 void UEntityVitalsComponent::CustomInitialize()
 {
 	// Initialize Current Health

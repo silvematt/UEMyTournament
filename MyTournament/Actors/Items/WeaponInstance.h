@@ -23,19 +23,19 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UWeaponAsset> _weaponAsset;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY()
 	TObjectPtr<UInventoryComponent> _ownersInventory;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY()
 	TObjectPtr<AActor> _weaponOwner;
-
 	
 
 public:
 	// Components
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY()
 	TObjectPtr<USkeletalMeshComponent> _skeletalMesh;
 
+	// Data, anim blueprints to play when this weapon is used
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UAnimBlueprint> _fpsAnimBlueprint;
 
@@ -50,6 +50,9 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	UFUNCTION()
 	AActor* GetWeaponOwner();
+
+	UFUNCTION()
 	void SetWeaponOwner(AActor* ownerToSet);
 };

@@ -48,6 +48,7 @@ protected:
 	void HandleOnVitalsChange(float newHP, float newArmor);
 
 public:
+	// CustomInitialize is called by the owner of this component (like the player)
 	UFUNCTION()
 	void CustomInitialize();
 };

@@ -19,6 +19,7 @@ AMyTournamentCharacter::AMyTournamentCharacter()
 	
 	// - Camera Holder
 	_cameraHolder = CreateDefaultSubobject<USceneComponent>(TEXT("CameraHolder"));
+	check(_cameraHolder != nullptr);
 
 	// - Camera
 	_cameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
@@ -40,14 +41,16 @@ AMyTournamentCharacter::AMyTournamentCharacter()
 	_cameraHolder->SetupAttachment(_fpsMesh);
 	_cameraComponent->SetupAttachment(_cameraHolder);
 
-	// Make sure that rotating the character rotates the camera
+	// Camera rotation is handled manually
 	_cameraComponent->bUsePawnControlRotation = false;
 
 	// Create the Vitals component
 	_vitalsComponent = CreateDefaultSubobject<UEntityVitalsComponent>(TEXT("VitalsComponent"));
+	check(_vitalsComponent != nullptr);
 
 	// Create the inventory component
 	_inventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
+	check(_inventoryComponent != nullptr);
 }
 
 // Called when the game starts or when spawned
@@ -57,7 +60,6 @@ void AMyTournamentCharacter::BeginPlay()
 	
 	APlayerController* playerController = Cast<APlayerController>(Controller);
 	
-
 	if (playerController)
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* inputSubsystem = ULocalPlayer::GetSubsystem< UEnhancedInputLocalPlayerSubsystem>(playerController->GetLocalPlayer()))
@@ -78,7 +80,7 @@ void AMyTournamentCharacter::BeginPlay()
 	_movementComponent = Cast<UCharacterMovementComponent>(GetMovementComponent());
 
 	// Begin HUD
-	_myTournamentUI = CreateWidget<UMyTournamentUI>(UGameplayStatics::GetPlayerController(GetWorld(), 0), _myTournamentUIClass);
+	_myTournamentUI = CreateWidget<UMyTournamentUI>(playerController, _myTournamentUIClass);
 	_myTournamentUI->AddToViewport(0);
 	_myTournamentUI->SetOwningPlayer(playerController);
 
@@ -86,7 +88,7 @@ void AMyTournamentCharacter::BeginPlay()
 	_inventoryComponent->_onWeaponIsEquippedDelegate.AddUniqueDynamic(this, &AMyTournamentCharacter::OnWeaponIsEquipped);
 
 	// Custom Initialize components
-	// Begin Play order can vary, so this ensures proper initialization of components
+	// Begin Play order can vary, so we initialize sub-components here. This ensures deterministic initialization 
 	_vitalsComponent->CustomInitialize();
 	_myTournamentUI->CustomInitialize();
 	_inventoryComponent->CustomInitialize();
@@ -103,17 +105,16 @@ void AMyTournamentCharacter::Tick(float DeltaTime)
 	_fpsMeshHeadSocket = _fpsMesh->GetSocketTransform(TEXT("head"), RTS_World);
 	_cameraHolder->SetWorldLocation(_fpsMeshHeadSocket.GetLocation());
 
-	// If we're falling, stop crouchign
+	// If we're falling, stop crouching
 	if (IsCrouched() && _movementComponent->IsFalling())
 		UnCrouch();
 
 	// Checks for wall run
-	DetectRunnableWalls();
+	if(_movementComponent->IsFalling() && !_wallRunIsWallRunning)
+		DetectRunnableWalls();
 
 	if (_wallRunIsWallRunning)
-	{
 		HandleWallRunMovements(DeltaTime);
-	}
 
 	// Rotates the camera holder if wallrunning
 	UpdateCameraTilt(DeltaTime);
@@ -201,11 +202,11 @@ void AMyTournamentCharacter::Dash()
 	else
 	{
 		// If there's one dash available to the player and he's moving over the _dashInputThreshold
-		if (!IsCrouched() && _dashCurAvaiable >= 1 && _movementVector.Length() >= _dashInputThreshold)
+		if (_dashCurAvaiable >= 1 && _movementVector.Length() >= _dashInputThreshold)
 		{
 			// We can perform a dash
 			// Get direction to dash towards to
-			FVector dashDirection = FVector(0, 0, 0);
+			FVector dashVector = FVector(0, 0, 0);
 			if (Controller)
 			{
 				// If player is wallruning, end wall run
@@ -216,20 +217,20 @@ void AMyTournamentCharacter::Dash()
 				FVector vecRight = GetActorRightVector();
 				FVector vecForward = GetActorForwardVector();
 
-				dashDirection = (vecRight * _movementVector.X * _dashForce) + (vecForward * _movementVector.Y * _dashForce) + (GetActorUpVector() * _dashVerticalLift);
+				dashVector = (vecRight * _movementVector.X * _dashForce) + (vecForward * _movementVector.Y * _dashForce) + (GetActorUpVector() * _dashVerticalLift);
 
 				// Add the grounded/airbone multiplier
 				if (_movementComponent->IsFalling())
-					dashDirection *= _dashAirboneMultiplier;
+					dashVector *= _dashAirboneMultiplier;
 				else
-					dashDirection *= _dashGroundedMultiplier;
+					dashVector *= _dashGroundedMultiplier;
 
-				LaunchCharacter(dashDirection, true, true);
+				LaunchCharacter(dashVector, true, true);
+				_dashCurAvaiable--;
 
 				// Set a timer that will call RefillOneDash on _dashRestoreCooldown
 				FTimerHandle tHandle;
 				GetWorldTimerManager().SetTimer(tHandle, this, &AMyTournamentCharacter::RefillOneDash, _dashRestoreCooldown, false);
-				_dashCurAvaiable--;
 
 				// Broadcast the event
 				_onDashIsUsedDelegate.Broadcast(_dashCurAvaiable);
@@ -261,9 +262,16 @@ bool AMyTournamentCharacter::IsInNormalGroundedMovements()
 
 void AMyTournamentCharacter::DetectRunnableWalls()
 {
-	if (_movementComponent->IsFalling() && !_wallRunIsWallRunning)
-	{
+	// Get forward speed
+	FVector velocity = _movementComponent->Velocity;
+	FVector forwardVector = GetActorForwardVector();
+	float forwardVelocity = FVector::DotProduct(velocity, forwardVector); // Scalar forward speed
 
+	// GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("Forward Velocity: ") + FString::SanitizeFloat(forwardVelocity));
+
+	// Check should wallrun only if forward speed is high enough
+	if (forwardVelocity >= _wallRunMinVelocityStartup)
+	{
 		// Cast traces left and right
 		bool shouldWallrun = false;
 		bool shouldWallrunRight = false;
@@ -276,60 +284,51 @@ void AMyTournamentCharacter::DetectRunnableWalls()
 		FCollisionQueryParams collParams;
 		collParams.AddIgnoredActor(this);
 
-		// Get forward speed
-		FVector velocity = _movementComponent->Velocity;
-		FVector forwardVector = GetActorForwardVector();
-		float forwardVelocity = FVector::DotProduct(velocity, forwardVector); // Scalar forward speed
+		if(_wallRunDebugEnabled)
+			DrawDebugLine(GetWorld(), start, end, FColor::Red, false, 2.0f, 0, 1.0f);
 
-		// GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("Forward Velocity: ") + FString::SanitizeFloat(forwardVelocity));
-
-		// Check should wallrun only if forward speed is high enough
-		if (forwardVelocity >= _wallRunMinVelocityStartup)
+		if (_movementVector.X >= _wallRunInputThreshold && GetWorld()->LineTraceSingleByChannel(hitRes, start, end, ECollisionChannel::ECC_Visibility, collParams))
 		{
-			if(_wallRunDebugEnabled)
-				DrawDebugLine(GetWorld(), start, end, FColor::Red, false, 2.0f, 0, 1.0f);
+			AActor* hitActor = hitRes.GetActor();
 
-			if (_movementVector.X >= _wallRunInputThreshold && GetWorld()->LineTraceSingleByChannel(hitRes, start, end, ECollisionChannel::ECC_Visibility, collParams))
+			// Check if it's the right tag
+			if (hitActor->ActorHasTag("WallRunnable") && (_wallRunLastWall == nullptr || (_wallRunLastWall != nullptr && _wallRunLastWall != hitActor))) // check if this wall is different from last wall, since we give the player one jump when he wallruns he could wallrun infinitely without this
+			{
+				if (_wallRunDebugEnabled)
+					GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("Right wall run!"));
+
+				shouldWallrun = true;
+				shouldWallrunRight = true;
+
+				StartWallRun(shouldWallrunRight, hitActor);
+				return;
+			}
+		}
+
+		// Should we check left?
+		if (!shouldWallrun)
+		{
+			hitRes.Reset(1.f, false);
+			end = start + (-_cameraComponent->GetRightVector() * _wallRunCheckVectorLength);
+
+			if (_wallRunDebugEnabled)
+				DrawDebugLine(GetWorld(), start, end, FColor::Magenta, false, 2.0f, 0, 1.0f);
+
+			if (_movementVector.X <= -_wallRunInputThreshold && GetWorld()->LineTraceSingleByChannel(hitRes, start, end, ECollisionChannel::ECC_Visibility, collParams))
 			{
 				AActor* hitActor = hitRes.GetActor();
 
 				// Check if it's the right tag
-				if (hitActor->ActorHasTag("WallRunnable") && (_wallRunLastWall == nullptr || (_wallRunLastWall != nullptr && _wallRunLastWall != hitActor))) // check if this wall is different from last wall, since we give the player one jump when he wallruns he could wallrun infinitely without this
+				if (hitActor->ActorHasTag("WallRunnable") && (_wallRunLastWall == nullptr || (_wallRunLastWall != nullptr && _wallRunLastWall != hitActor)))
 				{
 					if (_wallRunDebugEnabled)
-						GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("Right wall run!"));
+						GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("Left wall run!"));
 
 					shouldWallrun = true;
-					shouldWallrunRight = true;
+					shouldWallrunRight = false;
 
 					StartWallRun(shouldWallrunRight, hitActor);
-				}
-			}
-
-			// Should we check left?
-			if (!shouldWallrun)
-			{
-				hitRes.Reset(1.f, false);
-				end = start + (-_cameraComponent->GetRightVector() * _wallRunCheckVectorLength);
-
-				if (_wallRunDebugEnabled)
-					DrawDebugLine(GetWorld(), start, end, FColor::Magenta, false, 2.0f, 0, 1.0f);
-
-				if (_movementVector.X <= -_wallRunInputThreshold && GetWorld()->LineTraceSingleByChannel(hitRes, start, end, ECollisionChannel::ECC_Visibility, collParams))
-				{
-					AActor* hitActor = hitRes.GetActor();
-
-					// Check if it's the right tag
-					if (hitActor->ActorHasTag("WallRunnable") && (_wallRunLastWall == nullptr || (_wallRunLastWall != nullptr && _wallRunLastWall != hitActor)))
-					{
-						if (_wallRunDebugEnabled)
-							GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("Left wall run!"));
-
-						shouldWallrun = true;
-						shouldWallrunRight = false;
-
-						StartWallRun(shouldWallrunRight, hitActor);
-					}
+					return;
 				}
 			}
 		}
@@ -346,11 +345,6 @@ void AMyTournamentCharacter::StartWallRun(bool isRight, AActor* curWall)
 	// Kill Z velocity
 	_movementComponent->Velocity.Z = 0.0f;
 
-	// Set WallRun velocity to a fixed speed but keep direction the same
-	FVector curVelocity = _movementComponent->Velocity;
-	curVelocity = curVelocity.GetSafeNormal() * _wallRunSpeed;
-	_movementComponent->Velocity = curVelocity;
-
 	// Set gravity modifier
 	_movementComponent->GravityScale = _wallRunGravityScaleModifier;
 
@@ -359,6 +353,7 @@ void AMyTournamentCharacter::StartWallRun(bool isRight, AActor* curWall)
 		JumpCurrentCount--;
 
 	_wallRunIsWallRunning = true;
+	// Direction of the wallrun is set in HandleWallRunMovements
 }
 
 void AMyTournamentCharacter::HandleWallRunMovements(float deltaTime)
@@ -491,10 +486,10 @@ void AMyTournamentCharacter::UpdateCameraTilt(float deltaTime)
 	// Wallrunning - tilt left or right
 	float TargetRoll = _wallRunIsWallRunningRight ? -_wallRunCameraTiltValue : _wallRunCameraTiltValue;
 
-	FRotator CurrentRotation = _cameraHolder->GetRelativeRotation();
-	float NewRoll = FMath::FInterpTo(CurrentRotation.Pitch, TargetRoll, deltaTime, _wallRunCameraTiltInterpSpeed);
-	CurrentRotation.Pitch = NewRoll;
-	_cameraHolder->SetRelativeRotation(CurrentRotation);
+	FRotator currentRotation = _cameraHolder->GetRelativeRotation();
+	float newRoll = FMath::FInterpTo(currentRotation.Pitch, TargetRoll, deltaTime, _wallRunCameraTiltInterpSpeed);
+	currentRotation.Pitch = newRoll;
+	_cameraHolder->SetRelativeRotation(currentRotation);
 }
 
 void AMyTournamentCharacter::CustomCrouchToggle()
@@ -511,10 +506,14 @@ void AMyTournamentCharacter::CustomCrouchToggle()
 
 void AMyTournamentCharacter::OnWeaponIsEquipped(const FWeaponInInventoryEntry& weaponEntry)
 {
+	// FP
 	// Attach the weapon instance to the fpsHands component
 	FAttachmentTransformRules attachmentRules(EAttachmentRule::SnapToTarget, true);
 	weaponEntry._instance->AttachToComponent(_fpsMesh, attachmentRules, FName(TEXT("HandGrip_R")));
 	weaponEntry._instance->_skeletalMesh->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::FirstPerson; // flag the weapon instance as a FirstPerson mesh
+	weaponEntry._instance->_skeletalMesh->SetCastShadow(false);
+
+	// Spawn TPS weapon on TP mesh
 
 	// Update Anims
 	_fpsMesh->SetAnimInstanceClass(weaponEntry._instance->_fpsAnimBlueprint->GeneratedClass);

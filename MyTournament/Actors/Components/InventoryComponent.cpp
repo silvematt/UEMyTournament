@@ -14,6 +14,15 @@ UInventoryComponent::UInventoryComponent()
 	// ...
 }
 
+
+// Called when the game starts
+void UInventoryComponent::BeginPlay()
+{
+	Super::BeginPlay();
+
+}
+
+// CustomInitialize is called by the owner of this component (like the player)
 void UInventoryComponent::CustomInitialize()
 {
 	// Intialize
@@ -21,13 +30,6 @@ void UInventoryComponent::CustomInitialize()
 	{
 		TryAddWeapon(_defaultWeapon);
 	}
-}
-
-// Called when the game starts
-void UInventoryComponent::BeginPlay()
-{
-	Super::BeginPlay();
-
 }
 
 
@@ -59,12 +61,13 @@ bool UInventoryComponent::TryAddWeapon(UWeaponAsset* weaponToAdd)
 		_onWeaponIsAddedDelegate.Broadcast(weaponToAdd);
 		return true;
 	}
-	else
+	else // maybe just add ammo?
 		return false;
 }
 
 bool UInventoryComponent::TryEquip(EWeaponSlot slot)
 {
+	// Spawn WeaponInstance (may want to cache them for weapon switch)
 	_weapons[slot]._instance = GetWorld()->SpawnActor<AWeaponInstance>(_weapons[slot]._asset->_weaponActor, this->GetOwner()->GetTransform());
 	_weapons[slot]._instance->SetWeaponOwner(this->GetOwner());
 

@@ -14,6 +14,7 @@ void UMyTournamentUI::NativeConstruct()
 	
 }
 
+// CustomInitialize is called by the owner of this component (like the player)
 void UMyTournamentUI::CustomInitialize()
 {
 	AMyTournamentCharacter* myCharacter = Cast<AMyTournamentCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
