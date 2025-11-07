@@ -514,11 +514,15 @@ void AMyTournamentCharacter::OnWeaponIsEquipped(const FWeaponInInventoryEntry& w
 	weaponEntry._instance->_skeletalMesh->SetCastShadow(false);
 
 	// Spawn TPS weapon on TP mesh
+	weaponEntry._instance->_additionalSkeletalMesh->SetVisibility(true);
+	weaponEntry._instance->_additionalSkeletalMesh->SetActive(true);
+	weaponEntry._instance->_additionalSkeletalMesh->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::WorldSpaceRepresentation;
+	weaponEntry._instance->_additionalSkeletalMesh->AttachToComponent(GetMesh(), attachmentRules, FName(TEXT("HandGrip_R")));
+	weaponEntry._instance->_additionalSkeletalMesh->SetOnlyOwnerSee(true);
 
 	// Update Anims
 	_fpsMesh->SetAnimInstanceClass(weaponEntry._instance->_fpsAnimBlueprint->GeneratedClass);
 	GetMesh()->SetAnimInstanceClass(weaponEntry._instance->_tpsAnimBlueprint->GeneratedClass);
-
 }
 
 // Blueprints

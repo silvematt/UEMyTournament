@@ -11,6 +11,12 @@ AWeaponInstance::AWeaponInstance()
 
 	_skeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMesh"));
 	check(_skeletalMesh != nullptr);
+
+	_additionalSkeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("AdditionalSkeletalMesh"));
+	check(_additionalSkeletalMesh != nullptr);
+
+	_additionalSkeletalMesh->SetActive(false);
+	_additionalSkeletalMesh->SetVisibility(false);
 }
 
 // Called when the game starts or when spawned

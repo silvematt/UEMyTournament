@@ -32,8 +32,11 @@ protected:
 
 public:
 	// Components
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USkeletalMeshComponent> _skeletalMesh;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<USkeletalMeshComponent> _additionalSkeletalMesh; // used for the TP weapon for the player, mesh is set at runtime
 
 	// Data, anim blueprints to play when this weapon is used
 	UPROPERTY(EditDefaultsOnly)
