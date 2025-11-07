@@ -166,7 +166,7 @@ void AMyTournamentCharacter::Look(const FInputActionValue& inputValue)
 		float deltaPitch = lookVector.Y * -2.5f;
 
 		FRotator curRot = _cameraComponent->GetRelativeRotation();
-		curRot.Pitch = FMath::Clamp(FMath::UnwindDegrees(curRot.Pitch) + deltaPitch, -90.0f, 90.0f);
+		curRot.Pitch = FMath::Clamp(FMath::UnwindDegrees(curRot.Pitch) + deltaPitch, -70.0f, 70.0f);
 
 		_cameraComponent->SetRelativeRotation(curRot);
 	}
