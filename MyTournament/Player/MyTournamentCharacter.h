@@ -9,6 +9,7 @@
 #include "EnhancedInputSubsystems.h" 
 #include "InputActionValue.h"
 #include "Camera/CameraComponent.h"
+#include "../Interfaces/WeaponOperator.h"
 #include "MyTournamentCharacter.generated.h"
 
 class UInputMappingContext;
@@ -25,7 +26,7 @@ struct FWeaponInInventoryEntry;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDashIsUsedSignature, int, dashesNowAvailable);
 
 UCLASS()
-class MYTOURNAMENT_API AMyTournamentCharacter : public ACharacter
+class MYTOURNAMENT_API AMyTournamentCharacter : public ACharacter, public IWeaponOperator
 {
 	GENERATED_BODY()
 
@@ -47,6 +48,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> _crouchAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	TObjectPtr<UInputAction> _firePrimaryAction;
 
 	UPROPERTY(VisibleAnywhere, Category = "Input")
 	FVector2D _movementVector;
@@ -259,6 +263,13 @@ public:
 
 	UFUNCTION()
 	void OnWeaponIsEquipped(const FWeaponInInventoryEntry& weaponEntry);
+
+	UFUNCTION()
+	void OnWeaponIsUnequipped(const FWeaponInInventoryEntry& weaponEntry);
+
+	// IWeaponOperator
+	UFUNCTION()
+	FVector GetAimPoint_Implementation() override;
 
 	// Blueprint
 	UFUNCTION(BlueprintCallable, BlueprintPure)

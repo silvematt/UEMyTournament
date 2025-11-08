@@ -52,8 +52,8 @@ bool UInventoryComponent::TryAddWeapon(UWeaponAsset* weaponToAdd, bool addAmmo, 
 	// If no weapon was equipped, equip this one
 	if (_currentWeaponSlot == EWeaponSlot::Slot0)
 		TryEquip(weaponToAdd->_weaponSlot);
-	// Otherwise if the currently equipped weapon has no ammo, equip this new one
-	else if (GetCurrentWeaponAmmoCount() == 0)
+	// Otherwise if the currently equipped weapon has no ammo (and it's a different weapon), equip this new one
+	else if (_currentWeaponSlot != weaponToAdd->_weaponSlot && GetCurrentWeaponAmmoCount() == 0)
 		TryEquip(weaponToAdd->_weaponSlot);
 
 	_onWeaponIsAddedDelegate.Broadcast(weaponToAdd);
@@ -86,6 +86,9 @@ bool UInventoryComponent::TryAddAmmo(UAmmoType* ammoToAdd, int ammoCount)
 
 bool UInventoryComponent::TryEquip(EWeaponSlot slot)
 {
+	if (_currentWeaponSlot != EWeaponSlot::Slot0)
+		UnequipCurrentWeapon();
+
 	// Spawn WeaponInstance (may want to cache them for weapon switch)
 	_weapons[slot]._instance = GetWorld()->SpawnActor<AWeaponInstance>(_weapons[slot]._asset->_weaponActor, this->GetOwner()->GetTransform());
 	_weapons[slot]._instance->SetWeaponOwner(this->GetOwner());
@@ -94,8 +97,10 @@ bool UInventoryComponent::TryEquip(EWeaponSlot slot)
 	FAttachmentTransformRules attachmentRules(EAttachmentRule::SnapToTarget, true);
 	_weapons[slot]._instance->AttachToActor(_weapons[slot]._instance->GetWeaponOwner(), attachmentRules);
 
+	_currentWeaponSlot = slot;
+
 	_onWeaponIsEquippedDelegate.Broadcast(_weapons[slot]);
-	return false;
+	return true;
 }
 
 int32 UInventoryComponent::GetCurrentWeaponAmmoCount() const
@@ -110,4 +115,11 @@ int32 UInventoryComponent::GetCurrentWeaponAmmoCount() const
 	const UAmmoType* ammoType = entry->_asset->_ammoType;
 	const int32 ammoCount = _ammo.FindRef(ammoType); // returns 0 if not found
 	return ammoCount;
+}
+
+bool UInventoryComponent::UnequipCurrentWeapon()
+{
+
+	_onWeaponIsUnequippedDelegate.Broadcast(_weapons[_currentWeaponSlot]);
+	return true;
 }

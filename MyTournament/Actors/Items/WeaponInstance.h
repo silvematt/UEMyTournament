@@ -4,10 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "../../Interfaces/WeaponOperator.h"
 #include "WeaponInstance.generated.h"
 
 class UWeaponAsset;
 class UInventoryComponent;
+class UInputMappingContext;
+class UInputAction;
+class AProjectile;
 
 UCLASS()
 class MYTOURNAMENT_API AWeaponInstance : public AActor
@@ -24,11 +28,10 @@ protected:
 	TObjectPtr<UWeaponAsset> _weaponAsset;
 
 	UPROPERTY()
-	TObjectPtr<UInventoryComponent> _ownersInventory;
+	TObjectPtr<AActor> _weaponOwner;
 
 	UPROPERTY()
-	TObjectPtr<AActor> _weaponOwner;
-	
+	TObjectPtr<UInventoryComponent> _ownersInventory;
 
 public:
 	// Components
@@ -38,12 +41,19 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USkeletalMeshComponent> _additionalSkeletalMesh; // used for the TP weapon for the player, mesh is set at runtime
 
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UInputMappingContext> _weaponMappingContext; // this is set to the player when the weapon is equipped
+
 	// Data, anim blueprints to play when this weapon is used
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UAnimBlueprint> _fpsAnimBlueprint;
 
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UAnimBlueprint> _tpsAnimBlueprint;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<AProjectile> _projectileClass;
+
 
 protected:
 	// Called when the game starts or when spawned
@@ -53,9 +63,20 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	// Player-Only, binds the IA to AWeaponInstance functions
+	UFUNCTION()
+	void BindFirePrimaryAction(const UInputAction* InputToBind);
+
+	// Must be done as soon as this weapon instance is spawned
+	UFUNCTION()
+	void SetWeaponOwner(AActor* ownerToSet);
+
 	UFUNCTION()
 	AActor* GetWeaponOwner();
 
 	UFUNCTION()
-	void SetWeaponOwner(AActor* ownerToSet);
+	void FirePrimary();
+
+	UFUNCTION()
+	void HandleFirePrimary();
 };

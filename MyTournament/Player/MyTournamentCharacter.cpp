@@ -86,6 +86,7 @@ void AMyTournamentCharacter::BeginPlay()
 
 	// Set weapon callback
 	_inventoryComponent->_onWeaponIsEquippedDelegate.AddUniqueDynamic(this, &AMyTournamentCharacter::OnWeaponIsEquipped);
+	_inventoryComponent->_onWeaponIsUnequippedDelegate.AddUniqueDynamic(this, &AMyTournamentCharacter::OnWeaponIsUnequipped);
 
 	// Custom Initialize components
 	// Begin Play order can vary, so we initialize sub-components here. This ensures deterministic initialization 
@@ -523,6 +524,48 @@ void AMyTournamentCharacter::OnWeaponIsEquipped(const FWeaponInInventoryEntry& w
 	// Update Anims
 	_fpsMesh->SetAnimInstanceClass(weaponEntry._instance->_fpsAnimBlueprint->GeneratedClass);
 	GetMesh()->SetAnimInstanceClass(weaponEntry._instance->_tpsAnimBlueprint->GeneratedClass);
+
+	// Bind Input and use MappingContext
+	APlayerController* playerController = Cast<APlayerController>(Controller);
+
+	if (playerController)
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* inputSubsystem = ULocalPlayer::GetSubsystem< UEnhancedInputLocalPlayerSubsystem>(playerController->GetLocalPlayer()))
+		{
+			inputSubsystem->AddMappingContext(weaponEntry._instance->_weaponMappingContext, 1);
+		}
+	}
+	weaponEntry._instance->BindFirePrimaryAction(_firePrimaryAction);
+}
+
+void AMyTournamentCharacter::OnWeaponIsUnequipped(const FWeaponInInventoryEntry& weaponEntry)
+{
+	// Disable FP/TP weaponEntry._instance
+	// Unbind mapping context
+}
+
+// Returns the point hit by the center of the camera
+FVector AMyTournamentCharacter::GetAimPoint_Implementation()
+{
+	// The target position to return
+	FVector targetPosition;
+
+	UWorld* const World = GetWorld();
+	if (World != nullptr)
+	{
+		// The result of the line trace
+		FHitResult hitRes;
+
+		// Simulate a line trace from the character along the vector they're looking down
+		const FVector traceStart = _cameraComponent->GetComponentLocation();
+		const FVector traceEnd = traceStart + _cameraComponent->GetForwardVector() * 10000.0;
+		World->LineTraceSingleByChannel(hitRes, traceStart, traceEnd, ECollisionChannel::ECC_Visibility);
+
+		// Set the target position to the impact point of the hit or the end of the trace depending on whether it hit an object
+		targetPosition = hitRes.bBlockingHit ? hitRes.ImpactPoint : hitRes.TraceEnd;
+	}
+
+	return targetPosition;
 }
 
 // Blueprints

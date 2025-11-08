@@ -29,6 +29,7 @@ struct FWeaponInInventoryEntry
 // Delegates
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponIsAddedSignature, UWeaponAsset*, weaponAdded);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponIsEquippedSignature, const FWeaponInInventoryEntry&, weaponEntryEquipped);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponIsUnequippedSignature, const FWeaponInInventoryEntry&, weaponEntryUnequipped);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAmmoIsAddedSignature, UAmmoType*, ammoType);
 
 
@@ -61,6 +62,7 @@ protected:
 public:
 	FOnWeaponIsAddedSignature _onWeaponIsAddedDelegate;
 	FOnWeaponIsEquippedSignature _onWeaponIsEquippedDelegate;
+	FOnWeaponIsEquippedSignature _onWeaponIsUnequippedDelegate;
 	FOnAmmoIsAddedSignature _onAmmoIsAddedDelegate;
 
 protected:
@@ -85,6 +87,9 @@ public:
 	// Tries to spawn/enable the weapon instance
 	UFUNCTION()
 	bool TryEquip(EWeaponSlot slot);
+
+	UFUNCTION()
+	bool UnequipCurrentWeapon();
 
 	UFUNCTION()
 	int32 GetCurrentWeaponAmmoCount() const;
