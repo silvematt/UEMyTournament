@@ -3,6 +3,7 @@
 
 #include "Projectile.h"
 #include "Components/SphereComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "../../Data/Items/WeaponAsset.h"
 #include "../../Actors/Items/WeaponInstance.h"
 #include "../Components/EntityVitalsComponent.h"
@@ -26,10 +27,10 @@ AProjectile::AProjectile()
 
 	// Set collision component
 	_collisionComponent->SetSphereRadius(5.0f);
-	_collisionComponent->BodyInstance.SetCollisionProfileName("Projectile");
 
 	// Callback on projectile hits something
-	_collisionComponent->OnComponentHit.AddDynamic(this, &AProjectile::OnHit);
+	_collisionComponent->SetGenerateOverlapEvents(true);
+	_collisionComponent->OnComponentBeginOverlap.AddDynamic(this, &AProjectile::OnOverlap);
 
 	// Set hierarchy
 	RootComponent = _collisionComponent;
@@ -67,13 +68,13 @@ void AProjectile::Tick(float DeltaTime)
 
 }
 
-void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+void AProjectile::OnOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (!_shot)
 		return;
 
 	// Only add impulse and destroy projectile if we hit a physics
-	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr))
+	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherActor != _actorThatShot) && (OtherComp != nullptr))
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FString::Printf(TEXT("Hit %s"), *OtherActor->GetName()));
 
