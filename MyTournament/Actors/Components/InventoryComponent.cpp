@@ -28,7 +28,7 @@ void UInventoryComponent::CustomInitialize()
 	// Intialize
 	if (_defaultWeapon)
 	{
-		//TryAddWeapon(_defaultWeapon);
+		TryAddWeapon(_defaultWeapon, _defaultWeaponAmmoCount);
 	}
 }
 
@@ -40,7 +40,7 @@ void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 	// ...
 }
 
-bool UInventoryComponent::TryAddWeapon(UWeaponAsset* weaponToAdd, bool addAmmo, int ammoCount)
+bool UInventoryComponent::TryAddWeapon(UWeaponAsset* weaponToAdd, uint32 ammoCount)
 {
 	if (!weaponToAdd) 
 		return false;
@@ -58,13 +58,13 @@ bool UInventoryComponent::TryAddWeapon(UWeaponAsset* weaponToAdd, bool addAmmo, 
 
 	_onWeaponIsAddedDelegate.Broadcast(weaponToAdd);
 
-	if (addAmmo)
+	if (ammoCount > 0)
 		TryAddAmmo(weaponToAdd->_ammoType, ammoCount);
 
 	return true;
 }
 
-bool UInventoryComponent::TryAddAmmo(UAmmoType* ammoToAdd, int ammoCount)
+bool UInventoryComponent::TryAddAmmo(UAmmoType* ammoToAdd, uint32 ammoCount)
 {
 	if (!ammoToAdd)
 		return false;

@@ -21,9 +21,6 @@ public:
 	TObjectPtr<UWeaponAsset> _weaponToAdd;
 
 	UPROPERTY(EditAnywhere)
-	bool _addAmmo = true;
-
-	UPROPERTY(EditAnywhere)
 	int _ammoCount = 30;
 
 	UFUNCTION()

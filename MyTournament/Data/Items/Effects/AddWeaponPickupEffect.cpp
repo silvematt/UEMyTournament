@@ -12,7 +12,7 @@ bool UAddWeaponPickupEffect::ApplyTo_Implementation(AActor* taker)
 		// Check if its the player
 		if (auto* comp = taker->FindComponentByClass<UInventoryComponent>())
 		{
-			comp->TryAddWeapon(_weaponToAdd, _addAmmo, _ammoCount);
+			comp->TryAddWeapon(_weaponToAdd, _ammoCount);
 		}
 	}
 

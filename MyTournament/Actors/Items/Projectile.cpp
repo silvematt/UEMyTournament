@@ -3,6 +3,9 @@
 
 #include "Projectile.h"
 #include "Components/SphereComponent.h"
+#include "../../Data/Items/WeaponAsset.h"
+#include "../../Actors/Items/WeaponInstance.h"
+#include "../Components/EntityVitalsComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 
 // Sets default values
@@ -42,9 +45,11 @@ AProjectile::AProjectile()
 	InitialLifeSpan = _lifespan;
 }
 
-void AProjectile::InitializeProjectile(AWeaponInstance* weaponThatShot)
+void AProjectile::InitializeProjectile(AActor* actorThatShot, AWeaponInstance* weaponThatShot)
 {
+	_actorThatShot = actorThatShot;
 	_weaponThatShot = weaponThatShot;
+
 	_shot = true;
 }
 
@@ -68,9 +73,19 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 		return;
 
 	// Only add impulse and destroy projectile if we hit a physics
-	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr) && OtherComp->IsSimulatingPhysics())
+	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr))
 	{
-		OtherComp->AddImpulseAtLocation(GetVelocity() * _impulseForceOnHit, GetActorLocation());
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FString::Printf(TEXT("Hit %s"), *OtherActor->GetName()));
+
+		// Check if the actor hit has vitals
+		if (auto* comp = OtherActor->FindComponentByClass<UEntityVitalsComponent>())
+		{
+			float dmg = _weaponThatShot->_weaponAsset->_damage;
+			IDamageable::Execute_ApplyDamage(comp, dmg);
+		}
+
+		if(OtherComp->IsSimulatingPhysics())
+			OtherComp->AddImpulseAtLocation(GetVelocity() * _impulseForceOnHit, GetActorLocation());
 
 		Destroy();
 	}

@@ -40,3 +40,4 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	bool IsAtMaxArmor() const;
 };
+

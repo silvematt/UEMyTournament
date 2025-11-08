@@ -96,12 +96,12 @@ void AWeaponInstance::HandleFirePrimary()
 			//Set Spawn Collision Handling Override
 			FActorSpawnParameters ActorSpawnParams;
 			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
-
+			
 			// Spawn the projectile at the muzzle
 			AProjectile* prj = World->SpawnActor<AProjectile>(_projectileClass, spawnLocation, spawnRotation, ActorSpawnParams);
 
 			if(prj)
-				prj->InitializeProjectile(this);
+				prj->InitializeProjectile(_weaponOwner, this);
 		}
 		else
 		{

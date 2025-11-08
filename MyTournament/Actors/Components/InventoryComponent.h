@@ -49,6 +49,9 @@ protected:
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UWeaponAsset> _defaultWeapon;
 
+	UPROPERTY(EditAnywhere)
+	uint32 _defaultWeaponAmmoCount = 60;
+
 	UPROPERTY(VisibleAnywhere)
 	EWeaponSlot _currentWeaponSlot = EWeaponSlot::Slot0; // slot0 means not-initialized
 
@@ -79,10 +82,10 @@ public:
 
 	// Tries to add the weapon, this can fail if weapon is already in this inventory and ammo is maxed out
 	UFUNCTION()
-	bool TryAddWeapon(UWeaponAsset* weaponToAdd, bool addAmmo, int ammoCount);
+	bool TryAddWeapon(UWeaponAsset* weaponToAdd, uint32 ammoCount);
 
 	UFUNCTION()
-	bool TryAddAmmo(UAmmoType* ammoToAdd, int ammoCount);
+	bool TryAddAmmo(UAmmoType* ammoToAdd, uint32 ammoCount);
 
 	// Tries to spawn/enable the weapon instance
 	UFUNCTION()

@@ -24,9 +24,6 @@ public:
 
 // Properties
 protected:
-	UPROPERTY(EditDefaultsOnly)
-	TObjectPtr<UWeaponAsset> _weaponAsset;
-
 	UPROPERTY()
 	TObjectPtr<AActor> _weaponOwner;
 
@@ -34,6 +31,9 @@ protected:
 	TObjectPtr<UInventoryComponent> _ownersInventory;
 
 public:
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UWeaponAsset> _weaponAsset;
+
 	// Components
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USkeletalMeshComponent> _skeletalMesh;

@@ -9,6 +9,7 @@
 
 // Delegates
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDamageIsAppliedSignature, float, newHealth, float, newArmor);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeathSignature);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class MYTOURNAMENT_API UEntityVitalsComponent : public UActorComponent, public IDamageable
@@ -21,6 +22,9 @@ public:
 
 // Properties
 private:
+	UPROPERTY(VisibleAnywhere, Category = "Vitals")
+	bool _isAlive = true;
+
 	UPROPERTY(VisibleAnywhere, Category = "Vitals")
 	float _currentHealth = 0.0f;
 
@@ -41,6 +45,9 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnDamageIsAppliedSignature _onVitalsChange;
 
+	UPROPERTY(BlueprintAssignable)
+	FOnDeathSignature _onDeathDelegate;
+
 public:	
 	// CustomInitialize is called by the owner of this component (like the player)
 	void CustomInitialize();
@@ -59,6 +66,10 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	float GetMaxAmor() { return _maxArmor; }
+
+	// Should be called by ApplyDamage_Implementation after health reaches 0
+	UFUNCTION()
+	void Death();
 
 	// IDamageable
 	UFUNCTION()

@@ -28,6 +28,8 @@ void UEntityVitalsComponent::CustomInitialize()
 	_currentHealth = _maxHealth / 2.0f;
 	_currentArmor = _maxArmor / 2.0f;
 
+	_isAlive = true;
+
 	_onVitalsChange.Broadcast(_currentHealth, _currentArmor);
 }
 
@@ -39,9 +41,17 @@ void UEntityVitalsComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	// ...
 }
 
+void UEntityVitalsComponent::Death()
+{
+	_currentHealth = 0.0f;
+	_isAlive = false;
+
+	_onDeathDelegate.Broadcast();
+}
+
 void UEntityVitalsComponent::ApplyDamage_Implementation(float dmgAmount)
 {
-	if (dmgAmount <= 0.0f)
+	if (dmgAmount <= 0.0f || !_isAlive)
 		return;
 
 	const float factor = (_currentArmor >= 1.0f) ? FMath::Min(10.0f / _currentArmor, 1.0f) : 1.0f;
@@ -51,6 +61,9 @@ void UEntityVitalsComponent::ApplyDamage_Implementation(float dmgAmount)
 	_currentArmor = FMath::Clamp(_currentArmor - (dmgAmount), 0.0f, _maxArmor);
 
 	_onVitalsChange.Broadcast(_currentHealth, _currentArmor);
+
+	if (_currentHealth <= 0.0f)
+		Death();
 }
 
 void UEntityVitalsComponent::AddHealth_Implementation(float hpAmount)

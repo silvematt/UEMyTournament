@@ -32,6 +32,9 @@ protected:
 	TObjectPtr<USphereComponent> _collisionComponent;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Projectile | Status")
+	TObjectPtr<AActor> _actorThatShot;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Projectile | Status")
 	TObjectPtr<AWeaponInstance> _weaponThatShot;
 
 public:
@@ -39,16 +42,13 @@ public:
 	bool _shot = false; // if shot is true, then we check for collision. If shot is false this projectile is still initializing
 
 	UPROPERTY(EditAnywhere, Category = "Projectile | Settings")
-	float _travelSpeed = 3000.0f;
+	float _travelSpeed = 5000.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Projectile | Settings")
 	float _impulseForceOnHit = 100.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Projectile | Settings")
 	float _lifespan = 10.0f;
-
-	UPROPERTY(EditAnywhere, Category = "Projectile | Settings")
-	float _damageMultiplier = 1.0f;
 
 // Methods
 protected:
@@ -61,7 +61,7 @@ public:
 
 	// Must be called as soon as the projectile is instantiated
 	UFUNCTION()
-	void InitializeProjectile(AWeaponInstance* weaponThatShot);
+	void InitializeProjectile(AActor* actorThatShot, AWeaponInstance* weaponThatShot);
 
 	// Called when the projectile collides with an object
 	UFUNCTION()
