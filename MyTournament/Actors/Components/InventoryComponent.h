@@ -95,12 +95,15 @@ public:
 	UFUNCTION()
 	bool UnequipCurrentWeapon();
 
+	// Returns the ammo of the currently equipped weapon (if any)
 	UFUNCTION()
 	int32 GetCurrentWeaponAmmoCount() const;
 
+	// Consumes 'val' of the passed ammo type
 	UFUNCTION()
 	void ConsumeAmmo(UAmmoType* ammo, uint32 val);
 
+	// Returns the ammo count of a specific type
 	UFUNCTION()
 	uint32 GetAmmoCount(UAmmoType* ammo);
 };

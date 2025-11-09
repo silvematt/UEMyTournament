@@ -97,6 +97,7 @@ bool UInventoryComponent::TryEquip(EWeaponSlot slot)
 	FAttachmentTransformRules attachmentRules(EAttachmentRule::SnapToTarget, true);
 	_weapons[slot]._instance->AttachToActor(_weapons[slot]._instance->GetWeaponOwner(), attachmentRules);
 
+	// Update _currentWeaponSlot
 	_currentWeaponSlot = slot;
 
 	_onWeaponIsEquippedDelegate.Broadcast(_weapons[slot]);
@@ -108,6 +109,7 @@ int32 UInventoryComponent::GetCurrentWeaponAmmoCount() const
 	if (_currentWeaponSlot == EWeaponSlot::Slot0)
 		return 0;
 
+	// Check for invalid case
 	const FWeaponInInventoryEntry* entry = _weapons.Find(_currentWeaponSlot);
 	if (!entry)
 		return 0;

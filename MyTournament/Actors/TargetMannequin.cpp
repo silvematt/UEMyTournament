@@ -35,10 +35,6 @@ void ATargetMannequin::BeginPlay()
 
 	_skeletalMesh->SetAnimInstanceClass(_defaultAnimBlueprint->GeneratedClass);
 	_animInstance = _skeletalMesh->GetAnimInstance();
-
-	// Attach the weapon instance to the fpsHands component
-	//FAttachmentTransformRules attachmentRules(EAttachmentRule::SnapToTarget, true);
-	//_weaponMesh->AttachToComponent(_skeletalMesh, attachmentRules, FName(TEXT("hand_r")));
 }
 
 // Called every frame
@@ -49,6 +45,7 @@ void ATargetMannequin::Tick(float DeltaTime)
 }
 void ATargetMannequin::HandleOnVitalsChange(float newHP, float newAP)
 {
+	// Trigger the BP_ implemented function
 	BP_OnVitalsChange(newHP, newAP);
 }
 

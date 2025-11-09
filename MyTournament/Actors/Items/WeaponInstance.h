@@ -36,10 +36,10 @@ public:
 
 	// Components
 	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<USkeletalMeshComponent> _skeletalMesh;
+	TObjectPtr<USkeletalMeshComponent> _skeletalMesh; // Main weapon mesh
 
 	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<USkeletalMeshComponent> _additionalSkeletalMesh; // used for the TP weapon for the player, mesh is set at runtime
+	TObjectPtr<USkeletalMeshComponent> _additionalSkeletalMesh; // Additional mesh used for the TP weapon for the player, the actual SK_Mesh is set at runtime the same as _skeletalMesh
 
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UInputMappingContext> _weaponMappingContext; // this is set to the player when the weapon is equipped
@@ -54,18 +54,23 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<AProjectile> _projectileClass;
 
+	// True if the IA_Fire action is being held down (can be set false via code, like if the player is firing an automatic weapon and he runs out of ammo)
 	UPROPERTY(VisibleAnywhere)
 	bool _bIsTriggerHeld = false;
 
+	// Allows to shoot at the set fire rate
 	UPROPERTY(VisibleAnywhere)
 	float _fireTimer = 0.0f;;
 
+	// Burst fire mode management
 	UPROPERTY(VisibleAnywhere)
 	bool _burstStarted = false;
 
+	// How many bullets were shot in the current burst
 	UPROPERTY(VisibleAnywhere)
 	int _burstNumShot = 0;
 
+	// Debugs the raycast shot if this weapon doesn't instantiate bullets
 	UPROPERTY(EditAnywhere)
 	bool _debugRaycastBullet = false;
 
@@ -73,9 +78,11 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	// Spawns a Bullet when FireOneShot determines so
 	UFUNCTION()
 	void SpawnBullet(FVector spawnLocation, FRotator spawnRotation);
 
+	// Fires a LineTrace when FireOneShot determines so
 	UFUNCTION()
 	void RaycastBullet(FVector start, FVector end);
 
@@ -94,15 +101,19 @@ public:
 	UFUNCTION()
 	AActor* GetWeaponOwner();
 
+	// FirePrimary input action
 	UFUNCTION()
 	void FirePrimary();
 
+	// Called on input release or if the weapons has to stop firing
 	UFUNCTION()
 	void StopFiring();
 
+	// Fires one shot at the _weaponAssets conditions
 	UFUNCTION()
 	void FireOneShot();
 
+	// Firing Handling called in Tick()
 	UFUNCTION()
 	void HandleFiring();
 };

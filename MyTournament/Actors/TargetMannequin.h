@@ -20,9 +20,12 @@ public:
 
 // Properties
 protected:
+
+	// Skeletal Mesh of the mannequin
 	UPROPERTY(Category = Character, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USkeletalMeshComponent> _skeletalMesh;
 
+	// Skeletal Mesh of the weapon that the mannequin holds
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<USkeletalMeshComponent> _weaponMesh;
 
@@ -52,6 +55,7 @@ public:
 	UFUNCTION()
 	void HandleOnDeath();
 
+	// Allows to have a BP_ function to run when HandleOnVitalsChange gets called by _entityVitals's delegate onVitalsChange
 	UFUNCTION(BlueprintImplementableEvent, Category = "Vitals")
 	void BP_OnVitalsChange(float NewHP, float NewAP);
 };
