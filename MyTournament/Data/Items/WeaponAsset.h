@@ -54,6 +54,12 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon | Core")
 	EFireMode _fireMode = EFireMode::Single;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon | Core", meta = (EditCondition = "_fireMode == EFireMode::Burst", EditConditionHides))
+	int _burstShotsToFire = 3;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon | Core", meta = (EditCondition = "_fireMode == EFireMode::Burst", EditConditionHides))
+	float _burstFireRate = 1.0f;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon | Core")
 	EShootingType _shootingType = EShootingType::Raycast;
 

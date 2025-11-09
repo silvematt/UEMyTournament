@@ -36,25 +36,11 @@ void AWeaponInstance::BindFirePrimaryAction(const UInputAction* InputToBind)
 		if (UEnhancedInputComponent* enhancedInputComponent = Cast<UEnhancedInputComponent>(pc->InputComponent))
 		{
 			// Fire
-			enhancedInputComponent->BindAction(InputToBind, ETriggerEvent::Triggered, this, &AWeaponInstance::FirePrimary);
+			enhancedInputComponent->BindAction(InputToBind, ETriggerEvent::Started, this, &AWeaponInstance::FirePrimary);
+			enhancedInputComponent->BindAction(InputToBind, ETriggerEvent::Completed, this, &AWeaponInstance::StopFiring);
 			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Done!"));
 		}
 	}
-}
-
-
-// Called when the game starts or when spawned
-void AWeaponInstance::BeginPlay()
-{
-	Super::BeginPlay();
-	
-}
-
-// Called every frame
-void AWeaponInstance::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
 }
 
 // Sets both the weapon owner and the ammoValue ptr 
@@ -67,9 +53,9 @@ void AWeaponInstance::SetWeaponOwner(AActor* ownerToSet)
 		// Check if owner has the WeaponOperator interface, otherwise that owner shouldn't really own this weapon
 		if (!_weaponOwner->GetClass()->ImplementsInterface(UWeaponOperator::StaticClass()))
 			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("_weaponOwner does not implement IWeaponOperator!"));
-	
+
 		// Check if owner has inventory and set reference
-		if(!(_ownersInventory = ownerToSet->FindComponentByClass<UInventoryComponent>()))
+		if (!(_ownersInventory = ownerToSet->FindComponentByClass<UInventoryComponent>()))
 			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("_weaponOwner does not have an Inventory!"));
 	}
 }
@@ -79,19 +65,84 @@ AActor* AWeaponInstance::GetWeaponOwner()
 	return _weaponOwner;
 }
 
-void AWeaponInstance::FirePrimary()
+
+// Called when the game starts or when spawned
+void AWeaponInstance::BeginPlay()
 {
-	if(_ownersInventory->GetAmmoCount(_weaponAsset->_ammoType) > 0)
-		HandleFirePrimary();
+	Super::BeginPlay();
+
+	_fireTimer = _weaponAsset->_fireRate;
 }
 
-void AWeaponInstance::HandleFirePrimary()
+// Called every frame
+void AWeaponInstance::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	// Advance the fireTimer, when _fireTimer >= _weaponAsset->fireRate, we can shoot one bullet
+	_fireTimer += 1 * DeltaTime;
+
+	HandleFiring();
+}
+
+void AWeaponInstance::HandleFiring()
+{
+	// Owner's current weapon is this one if this function is running
+
+	if (_burstStarted)
+	{
+		// If no ammo, stop burst and return
+		if (_ownersInventory->GetCurrentWeaponAmmoCount() <= 0)
+		{
+			_burstStarted = false;
+			_burstNumShot = 0;
+			StopFiring();
+			// Dry fire
+			return;
+		}
+
+		// Otherwise keep the burst going until FireOneShot disables it
+		if (_fireTimer >= _weaponAsset->_burstFireRate)
+		{
+			FireOneShot();
+			_fireTimer = 0.0f; // reset fire timer
+		}
+	}
+	else if (_bIsTriggerHeld) 
+	{
+		if (_ownersInventory->GetCurrentWeaponAmmoCount() <= 0)
+		{
+			// Dry fire
+			StopFiring();
+			return;
+		}
+		if (_fireTimer >= _weaponAsset->_fireRate)
+		{
+			FireOneShot();
+			_fireTimer = 0.0f; // reset fire timer
+		}
+	}
+}
+
+void AWeaponInstance::FirePrimary()
+{
+	// if(_fireTimer >= _weaponAsset->_fireRate) If the weapon can't fire, you may not want to pick up the input (you can double tap for continuous burst otherwise), but it can feel more clunky
+	_bIsTriggerHeld = true;
+}
+
+void AWeaponInstance::StopFiring()
+{
+	_bIsTriggerHeld = false;
+}
+
+void AWeaponInstance::FireOneShot()
 {
 	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Firing the weapon!"));
 
 	// Make sure weaponOwner is valid and implements IWeaponOperator
 	if (IsValid(_weaponOwner) && _weaponOwner->GetClass()->ImplementsInterface(UWeaponOperator::StaticClass()))
 	{
+		// Physical Bullet
 		if (_weaponAsset->_shootingType == EShootingType::Bullet)
 		{
 			FVector targetPosition = IWeaponOperator::Execute_GetAimPoint(_weaponOwner);
@@ -103,9 +154,9 @@ void AWeaponInstance::HandleFirePrimary()
 
 			SpawnBullet(spawnLocation, spawnRotation);
 		}
+		// RaycastBullet
 		else if (_weaponAsset->_shootingType == EShootingType::Raycast)
 		{
-			// RaycastBullet
 			FVector targetPosition = IWeaponOperator::Execute_GetAimPoint(_weaponOwner);
 			FVector socketLocation = _skeletalMesh->GetSocketLocation("Muzzle");
 			FRotator spawnRotation = UKismetMathLibrary::FindLookAtRotation(socketLocation, targetPosition);
@@ -115,6 +166,25 @@ void AWeaponInstance::HandleFirePrimary()
 		}
 
 		_ownersInventory->ConsumeAmmo(_weaponAsset->_ammoType, 1);
+
+		// If this weapon is semi, release the trigger after we shot
+		if(_weaponAsset->_fireMode == EFireMode::Single)
+			StopFiring();
+		// Burst Logic
+		else if (_weaponAsset->_fireMode == EFireMode::Burst)
+		{
+			// Add a shot fired to the burst
+			_burstStarted = true;
+			_burstNumShot++;
+
+			// Burst Completed
+			if (_burstNumShot >= _weaponAsset->_burstShotsToFire)
+			{
+				_burstStarted = false;
+				_burstNumShot = 0;
+				StopFiring();
+			}
+		}
 	}
 	else
 	{
@@ -171,6 +241,7 @@ void AWeaponInstance::RaycastBullet(FVector start, FVector end)
 			IDamageable::Execute_ApplyDamage(comp, dmg);
 		}
 
+		// Add physics impulse
 		if (otherComponent->IsSimulatingPhysics())
 		{
 			const FVector shotDir = (end - start).GetSafeNormal();

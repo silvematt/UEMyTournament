@@ -30,9 +30,6 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UInventoryComponent> _ownersInventory;
 
-	UPROPERTY(EditAnywhere)
-	bool _debugRaycastBullet = false;
-
 public:
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UWeaponAsset> _weaponAsset;
@@ -57,6 +54,20 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<AProjectile> _projectileClass;
 
+	UPROPERTY(VisibleAnywhere)
+	bool _bIsTriggerHeld = false;
+
+	UPROPERTY(VisibleAnywhere)
+	float _fireTimer = 0.0f;;
+
+	UPROPERTY(VisibleAnywhere)
+	bool _burstStarted = false;
+
+	UPROPERTY(VisibleAnywhere)
+	int _burstNumShot = 0;
+
+	UPROPERTY(EditAnywhere)
+	bool _debugRaycastBullet = false;
 
 protected:
 	// Called when the game starts or when spawned
@@ -87,5 +98,11 @@ public:
 	void FirePrimary();
 
 	UFUNCTION()
-	void HandleFirePrimary();
+	void StopFiring();
+
+	UFUNCTION()
+	void FireOneShot();
+
+	UFUNCTION()
+	void HandleFiring();
 };
