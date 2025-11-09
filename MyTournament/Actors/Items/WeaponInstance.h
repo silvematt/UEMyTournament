@@ -30,6 +30,9 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UInventoryComponent> _ownersInventory;
 
+	UPROPERTY(EditAnywhere)
+	bool _debugRaycastBullet = false;
+
 public:
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UWeaponAsset> _weaponAsset;
@@ -58,6 +61,12 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	UFUNCTION()
+	void SpawnBullet(FVector spawnLocation, FRotator spawnRotation);
+
+	UFUNCTION()
+	void RaycastBullet(FVector start, FVector end);
 
 public:	
 	// Called every frame

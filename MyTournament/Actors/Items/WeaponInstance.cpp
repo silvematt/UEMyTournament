@@ -4,7 +4,9 @@
 #include "WeaponInstance.h"
 #include "../../Player/MyTournamentCharacter.h"
 #include "../../Actors/Items/Projectile.h"
+#include "../../Interfaces/Damageable.h"
 #include "../../Actors/Components/InventoryComponent.h"
+#include "../../Actors/Components/EntityVitalsComponent.h"
 #include <Kismet/KismetMathLibrary.h>
 
 // Sets default values
@@ -79,20 +81,18 @@ AActor* AWeaponInstance::GetWeaponOwner()
 
 void AWeaponInstance::FirePrimary()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Firing the weapon!"));
-
 	if(_ownersInventory->GetAmmoCount(_weaponAsset->_ammoType) > 0)
 		HandleFirePrimary();
 }
 
 void AWeaponInstance::HandleFirePrimary()
 {
-	UWorld* const World = GetWorld();
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Firing the weapon!"));
 
-	if (World != nullptr && _projectileClass != nullptr)
+	// Make sure weaponOwner is valid and implements IWeaponOperator
+	if (IsValid(_weaponOwner) && _weaponOwner->GetClass()->ImplementsInterface(UWeaponOperator::StaticClass()))
 	{
-		// Make sure weaponOwner is valid and implements IWeaponOperator
-		if (IsValid(_weaponOwner) && _weaponOwner->GetClass()->ImplementsInterface(UWeaponOperator::StaticClass()))
+		if (_weaponAsset->_shootingType == EShootingType::Bullet)
 		{
 			FVector targetPosition = IWeaponOperator::Execute_GetAimPoint(_weaponOwner);
 
@@ -101,21 +101,82 @@ void AWeaponInstance::HandleFirePrimary()
 			FRotator spawnRotation = UKismetMathLibrary::FindLookAtRotation(socketLocation, targetPosition);
 			FVector spawnLocation = socketLocation + UKismetMathLibrary::GetForwardVector(spawnRotation) * 10.0;
 
-			//Set Spawn Collision Handling Override
-			FActorSpawnParameters ActorSpawnParams;
-			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-			
-			// Spawn the projectile at the muzzle
-			AProjectile* prj = World->SpawnActor<AProjectile>(_projectileClass, spawnLocation, spawnRotation, ActorSpawnParams);
-
-			if(prj)
-				prj->InitializeProjectile(_weaponOwner, this);
-
-			_ownersInventory->ConsumeAmmo(_weaponAsset->_ammoType, 1);
+			SpawnBullet(spawnLocation, spawnRotation);
 		}
-		else
+		else if (_weaponAsset->_shootingType == EShootingType::Raycast)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("_weaponOwner is not valid or does not implement IWeaponOperator!"));
+			// RaycastBullet
+			FVector targetPosition = IWeaponOperator::Execute_GetAimPoint(_weaponOwner);
+			FVector socketLocation = _skeletalMesh->GetSocketLocation("Muzzle");
+			FRotator spawnRotation = UKismetMathLibrary::FindLookAtRotation(socketLocation, targetPosition);
+			FVector start = socketLocation + UKismetMathLibrary::GetForwardVector(spawnRotation) * 10.0;
+
+			RaycastBullet(start, targetPosition);
+		}
+
+		_ownersInventory->ConsumeAmmo(_weaponAsset->_ammoType, 1);
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("_weaponOwner is not valid or does not implement IWeaponOperator!"));
+	}
+}
+
+void AWeaponInstance::SpawnBullet(FVector spawnLocation, FRotator spawnRotation)
+{
+	UWorld* const World = GetWorld();
+
+	if (World && _projectileClass != nullptr)
+	{
+		//Set Spawn Collision Handling Override
+		FActorSpawnParameters ActorSpawnParams;
+		ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+		// Spawn the projectile at the muzzle
+		AProjectile* prj = World->SpawnActor<AProjectile>(_projectileClass, spawnLocation, spawnRotation, ActorSpawnParams);
+
+		if (prj)
+			prj->InitializeProjectile(_weaponOwner, this);
+	}
+}
+
+void AWeaponInstance::RaycastBullet(FVector start, FVector end)
+{
+	UWorld* const World = GetWorld();
+
+	// Trace the wall, so we can stick to it
+	FHitResult hitRes;
+
+	const ECollisionChannel WeaponRaycast = ECollisionChannel::ECC_GameTraceChannel2; // safer than hardcoding
+	FCollisionQueryParams collParams(SCENE_QUERY_STAT(WeaponRaycast), false);
+	collParams.AddIgnoredActor(this);
+	collParams.AddIgnoredActor(_weaponOwner);
+
+	// Debug the trace
+	if(_debugRaycastBullet)
+		DrawDebugLine(GetWorld(), start, end, FColor::Red, false, 3.0f, 0, 1.0f);
+
+	// Check if we're still attached to the wall (if the player looks away, this will fail, so the 'else' will correctly deatach him from the wall)
+	if (GetWorld()->LineTraceSingleByChannel(hitRes, start, end, WeaponRaycast, collParams))
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FString::Printf(TEXT("Hit %s"), *hitRes.GetActor()->GetName()));
+
+		AActor* otherActor = hitRes.GetActor();
+		UPrimitiveComponent* otherComponent = hitRes.GetComponent();
+
+		// Check if the actor hit has vitals
+		if (auto* comp = otherActor->FindComponentByClass<UEntityVitalsComponent>())
+		{
+			float dmg = _weaponAsset->_damage;
+			IDamageable::Execute_ApplyDamage(comp, dmg);
+		}
+
+		if (otherComponent->IsSimulatingPhysics())
+		{
+			const FVector shotDir = (end - start).GetSafeNormal();
+			const FVector impulse = shotDir * _weaponAsset->_impulseForceOnHit;
+
+			otherComponent->AddImpulseAtLocation(impulse, hitRes.ImpactPoint);
 		}
 	}
 }

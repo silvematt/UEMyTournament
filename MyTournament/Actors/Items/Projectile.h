@@ -45,9 +45,6 @@ public:
 	float _travelSpeed = 5000.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Projectile | Settings")
-	float _impulseForceOnHit = 100.0f;
-
-	UPROPERTY(EditAnywhere, Category = "Projectile | Settings")
 	float _lifespan = 10.0f;
 
 // Methods

@@ -86,7 +86,7 @@ void AProjectile::OnOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherAc
 		}
 
 		if(OtherComp->IsSimulatingPhysics())
-			OtherComp->AddImpulseAtLocation(GetVelocity() * _impulseForceOnHit, GetActorLocation());
+			OtherComp->AddImpulseAtLocation(GetVelocity().GetSafeNormal() * _weaponThatShot->_weaponAsset->_impulseForceOnHit, GetActorLocation());
 
 		Destroy();
 	}

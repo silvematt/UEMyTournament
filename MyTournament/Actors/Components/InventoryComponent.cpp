@@ -28,7 +28,7 @@ void UInventoryComponent::CustomInitialize()
 	// Intialize
 	if (_defaultWeapon)
 	{
-		//TryAddWeapon(_defaultWeapon, _defaultWeaponAmmoCount);
+		TryAddWeapon(_defaultWeapon, _defaultWeaponAmmoCount);
 	}
 }
 

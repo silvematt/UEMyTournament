@@ -26,6 +26,13 @@ enum class EFireMode : uint8
 	Auto
 };
 
+UENUM(BlueprintType)
+enum class EShootingType : uint8
+{
+	Raycast = 0,
+	Bullet,
+};
+
 /**
  * 
  */
@@ -48,6 +55,9 @@ public:
 	EFireMode _fireMode = EFireMode::Single;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon | Core")
+	EShootingType _shootingType = EShootingType::Raycast;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon | Core")
 	float _damage = 25.0f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon | Core", meta = (ClampMin = "0.1"))
@@ -56,8 +66,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon | Core")
 	float _range = 10000.0f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon | Core")
-	bool _usesProjectiles = false;
+	UPROPERTY(EditAnywhere, Category = "Projectile | Settings")
+	float _impulseForceOnHit = 10000.0f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon | Core")
 	TObjectPtr<UAmmoType> _ammoType;
