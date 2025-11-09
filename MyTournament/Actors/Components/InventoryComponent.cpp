@@ -28,7 +28,7 @@ void UInventoryComponent::CustomInitialize()
 	// Intialize
 	if (_defaultWeapon)
 	{
-		TryAddWeapon(_defaultWeapon, _defaultWeaponAmmoCount);
+		//TryAddWeapon(_defaultWeapon, _defaultWeaponAmmoCount);
 	}
 }
 
@@ -49,6 +49,9 @@ bool UInventoryComponent::TryAddWeapon(UWeaponAsset* weaponToAdd, uint32 ammoCou
 	if (!_weapons.Contains(weaponToAdd->_weaponSlot))
 		_weapons.Add(weaponToAdd->_weaponSlot, FWeaponInInventoryEntry(weaponToAdd));
 
+	// Always add ammo first, even if ammoCount is 0, the AmmoType entry will be created
+	TryAddAmmo(weaponToAdd->_ammoType, ammoCount);
+
 	// If no weapon was equipped, equip this one
 	if (_currentWeaponSlot == EWeaponSlot::Slot0)
 		TryEquip(weaponToAdd->_weaponSlot);
@@ -57,9 +60,6 @@ bool UInventoryComponent::TryAddWeapon(UWeaponAsset* weaponToAdd, uint32 ammoCou
 		TryEquip(weaponToAdd->_weaponSlot);
 
 	_onWeaponIsAddedDelegate.Broadcast(weaponToAdd);
-
-	if (ammoCount > 0)
-		TryAddAmmo(weaponToAdd->_ammoType, ammoCount);
 
 	return true;
 }
@@ -115,6 +115,30 @@ int32 UInventoryComponent::GetCurrentWeaponAmmoCount() const
 	const UAmmoType* ammoType = entry->_asset->_ammoType;
 	const int32 ammoCount = _ammo.FindRef(ammoType); // returns 0 if not found
 	return ammoCount;
+}
+
+uint32 UInventoryComponent::GetAmmoCount(UAmmoType* ammo) 
+{
+	if (_currentWeaponSlot == EWeaponSlot::Slot0)
+		return 0;
+
+	if (!_ammo.Contains(ammo))
+		return 0;
+
+	return _ammo[ammo];
+}
+
+void UInventoryComponent::ConsumeAmmo(UAmmoType* ammo, uint32 val)
+{
+	if (_currentWeaponSlot == EWeaponSlot::Slot0)
+		return;
+
+	if (!_ammo.Contains(ammo))
+		return;
+
+	_ammo[ammo] = FMath::Clamp(_ammo[ammo] - val, 0, ammo->_maxCapacity);
+
+	_onAmmoIsConsumedDelegate.Broadcast(ammo, _ammo[ammo]);
 }
 
 bool UInventoryComponent::UnequipCurrentWeapon()

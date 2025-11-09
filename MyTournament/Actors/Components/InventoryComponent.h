@@ -31,7 +31,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponIsAddedSignature, UWeaponAs
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponIsEquippedSignature, const FWeaponInInventoryEntry&, weaponEntryEquipped);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponIsUnequippedSignature, const FWeaponInInventoryEntry&, weaponEntryUnequipped);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAmmoIsAddedSignature, UAmmoType*, ammoType);
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAmmoIsConsumedSignature, UAmmoType*, ammoType, uint32, newAmmoVal);
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -65,8 +65,9 @@ protected:
 public:
 	FOnWeaponIsAddedSignature _onWeaponIsAddedDelegate;
 	FOnWeaponIsEquippedSignature _onWeaponIsEquippedDelegate;
-	FOnWeaponIsEquippedSignature _onWeaponIsUnequippedDelegate;
+	FOnWeaponIsUnequippedSignature _onWeaponIsUnequippedDelegate;
 	FOnAmmoIsAddedSignature _onAmmoIsAddedDelegate;
+	FOnAmmoIsConsumedSignature _onAmmoIsConsumedDelegate;
 
 protected:
 	// Called when the game starts
@@ -96,4 +97,10 @@ public:
 
 	UFUNCTION()
 	int32 GetCurrentWeaponAmmoCount() const;
+
+	UFUNCTION()
+	void ConsumeAmmo(UAmmoType* ammo, uint32 val);
+
+	UFUNCTION()
+	uint32 GetAmmoCount(UAmmoType* ammo);
 };

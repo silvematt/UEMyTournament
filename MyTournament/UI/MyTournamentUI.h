@@ -8,7 +8,11 @@
 
 class UTextBlock;
 class UProgressBar;
+class UOverlay;
+class UImage;
 class UEntityVitalsComponent;
+class UInventoryComponent;
+struct FWeaponInInventoryEntry;
 
 /**
  * 
@@ -33,9 +37,25 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	UProgressBar* _dashBarTwo;
 
+	// WeaponPanel
+	UPROPERTY(meta = (BindWidget))
+	UOverlay* _weaponOverlay;
+
+	UPROPERTY(meta = (BindWidget))
+	UImage* _weaponIcon;
+
+	UPROPERTY(meta = (BindWidget))
+	UImage* _ammoIcon;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* _ammoCountValue;
+
 	// Other
 	UPROPERTY(VisibleDefaultsOnly)
 	TObjectPtr<UEntityVitalsComponent> _playerVitals;
+
+	UPROPERTY(VisibleDefaultsOnly)
+	TObjectPtr<UInventoryComponent> _playerInventory;
 
 // Methods
 protected:
@@ -46,6 +66,16 @@ protected:
 
 	UFUNCTION()
 	void HandleOnVitalsChange(float newHP, float newArmor);
+
+	UFUNCTION()
+	void HandleOnWeaponIsEquipped(const FWeaponInInventoryEntry& newWeapon);
+
+	UFUNCTION()
+	void HandleOnAmmoIsAdded(UAmmoType* newAmmo);
+
+	// Updates the UI weapon counter
+	UFUNCTION()
+	void HandleOnAmmoIsConsumed(UAmmoType* newAmmo, uint32 ammoVal);
 
 public:
 	// CustomInitialize is called by the owner of this component (like the player)

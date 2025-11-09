@@ -18,9 +18,12 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	FName _ID;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
+	TSoftObjectPtr<UTexture2D> _ammoIcon;
+
 	UPROPERTY(EditDefaultsOnly)
 	FText _displayName;
 
 	UPROPERTY(EditDefaultsOnly)
-	uint32 _maxCapacity;
+	uint32 _maxCapacity;	
 };

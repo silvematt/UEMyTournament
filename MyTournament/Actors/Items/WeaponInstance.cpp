@@ -4,6 +4,7 @@
 #include "WeaponInstance.h"
 #include "../../Player/MyTournamentCharacter.h"
 #include "../../Actors/Items/Projectile.h"
+#include "../../Actors/Components/InventoryComponent.h"
 #include <Kismet/KismetMathLibrary.h>
 
 // Sets default values
@@ -54,14 +55,20 @@ void AWeaponInstance::Tick(float DeltaTime)
 
 }
 
+// Sets both the weapon owner and the ammoValue ptr 
 void AWeaponInstance::SetWeaponOwner(AActor* ownerToSet)
 {
 	if (ownerToSet)
 	{
 		_weaponOwner = ownerToSet;
 
+		// Check if owner has the WeaponOperator interface, otherwise that owner shouldn't really own this weapon
 		if (!_weaponOwner->GetClass()->ImplementsInterface(UWeaponOperator::StaticClass()))
 			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("_weaponOwner does not implement IWeaponOperator!"));
+	
+		// Check if owner has inventory and set reference
+		if(!(_ownersInventory = ownerToSet->FindComponentByClass<UInventoryComponent>()))
+			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("_weaponOwner does not have an Inventory!"));
 	}
 }
 
@@ -74,7 +81,8 @@ void AWeaponInstance::FirePrimary()
 {
 	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Firing the weapon!"));
 
-	HandleFirePrimary();
+	if(_ownersInventory->GetAmmoCount(_weaponAsset->_ammoType) > 0)
+		HandleFirePrimary();
 }
 
 void AWeaponInstance::HandleFirePrimary()
@@ -102,6 +110,8 @@ void AWeaponInstance::HandleFirePrimary()
 
 			if(prj)
 				prj->InitializeProjectile(_weaponOwner, this);
+
+			_ownersInventory->ConsumeAmmo(_weaponAsset->_ammoType, 1);
 		}
 		else
 		{

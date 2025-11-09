@@ -281,5 +281,8 @@ public:
 	// Getters
 	UFUNCTION(BlueprintPure, Category = "Vitals")
 	UEntityVitalsComponent* GetVitalsComponent() const { return _vitalsComponent; }
+
+	UFUNCTION(BlueprintPure, Category = "Inventory")
+	UInventoryComponent* GetInventoryComponent() const { return _inventoryComponent; }
 };
 

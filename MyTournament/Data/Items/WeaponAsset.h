@@ -41,6 +41,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon | Core")
 	TSubclassOf<AWeaponInstance> _weaponActor;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
+	TSoftObjectPtr<UTexture2D> _weaponIcon;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon | Core")
 	EFireMode _fireMode = EFireMode::Single;
 
