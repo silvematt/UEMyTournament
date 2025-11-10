@@ -17,4 +17,8 @@ class MYTOURNAMENT_API UMyTournamentAnimInstance : public UAnimInstance
 public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Animation")
 	bool _bIsDashing = false;
+
+	// Resets the custom properties to default, useful when switching AnimInstances
+	UFUNCTION()
+	void ResetProperties();
 };

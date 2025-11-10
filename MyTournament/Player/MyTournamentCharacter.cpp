@@ -236,6 +236,7 @@ void AMyTournamentCharacter::Dash()
 				// Broadcast the event
 				_onDashIsUsedDelegate.Broadcast(_dashCurAvaiable);
 
+				// Update animator
 				if (_movementVector.Y >= 0.7f)
 				{
 					_characterAnimInstance->_bIsDashing = true;
@@ -522,8 +523,14 @@ void AMyTournamentCharacter::OnWeaponIsEquipped(const FWeaponInInventoryEntry& w
 	weaponEntry._instance->_additionalSkeletalMesh->SetOnlyOwnerSee(true);
 
 	// Update Anims
+	// Reset current _fpsAnimInstance before setting a new one
+	_fpsAnimInstance->ResetProperties();
 	_fpsMesh->SetAnimInstanceClass(weaponEntry._instance->_fpsAnimBlueprint->GeneratedClass);
+	_fpsAnimInstance = Cast<UMyTournamentAnimInstance>(_fpsMesh->GetAnimInstance());
+
+	_characterAnimInstance->ResetProperties();
 	GetMesh()->SetAnimInstanceClass(weaponEntry._instance->_tpsAnimBlueprint->GeneratedClass);
+	_characterAnimInstance = Cast<UMyTournamentAnimInstance>(GetMesh()->GetAnimInstance());
 
 	// Bind Input and use MappingContext
 	APlayerController* playerController = Cast<APlayerController>(Controller);

@@ -3,3 +3,7 @@
 
 #include "MyTournamentAnimInstance.h"
 
+void UMyTournamentAnimInstance::ResetProperties()
+{
+	_bIsDashing = false;
+}
