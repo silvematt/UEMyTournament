@@ -12,6 +12,7 @@ class UInventoryComponent;
 class UInputMappingContext;
 class UInputAction;
 class AProjectile;
+class UNiagaraComponent;
 
 UCLASS()
 class MYTOURNAMENT_API AWeaponInstance : public AActor
@@ -53,6 +54,15 @@ public:
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<AProjectile> _projectileClass;
+
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UNiagaraComponent> _muzzleFX;
+
+	UPROPERTY(EditAnywhere, Category = "Audio")
+	TObjectPtr<USoundBase> _fireSound;
+
+	UPROPERTY(EditAnywhere, Category = "Audio")
+	TObjectPtr<UAudioComponent> _audioComponent;
 
 	// True if the IA_Fire action is being held down (can be set false via code, like if the player is firing an automatic weapon and he runs out of ammo)
 	UPROPERTY(VisibleAnywhere)

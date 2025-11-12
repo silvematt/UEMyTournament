@@ -7,6 +7,8 @@
 #include "../../Interfaces/Damageable.h"
 #include "../../Actors/Components/InventoryComponent.h"
 #include "../../Actors/Components/EntityVitalsComponent.h"
+#include "Components/AudioComponent.h"
+#include "NiagaraComponent.h"
 #include <Kismet/KismetMathLibrary.h>
 
 // Sets default values
@@ -18,8 +20,17 @@ AWeaponInstance::AWeaponInstance()
 	_skeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMesh"));
 	check(_skeletalMesh != nullptr);
 
+	_muzzleFX = CreateDefaultSubobject<UNiagaraComponent>(TEXT("MuzzleFx"));
+	check(_muzzleFX != nullptr);
+	_muzzleFX->SetupAttachment(_skeletalMesh, "Muzzle");
+	_muzzleFX->bAutoActivate = false;
+
 	_additionalSkeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("AdditionalSkeletalMesh"));
 	check(_additionalSkeletalMesh != nullptr);
+
+	_audioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
+	check(_audioComponent != nullptr);
+	_audioComponent->SetupAttachment(_skeletalMesh);
 
 	_additionalSkeletalMesh->SetActive(false);
 	_additionalSkeletalMesh->SetVisibility(false);
@@ -72,6 +83,7 @@ void AWeaponInstance::BeginPlay()
 	Super::BeginPlay();
 
 	_fireTimer = _weaponAsset->_fireRate;
+	_audioComponent->SetSound(_fireSound);
 }
 
 // Called every frame
@@ -166,6 +178,8 @@ void AWeaponInstance::FireOneShot()
 		}
 
 		_ownersInventory->ConsumeAmmo(_weaponAsset->_ammoType, 1);
+		_muzzleFX->Activate(true);
+		_audioComponent->Play();
 
 		// If this weapon is semi, release the trigger after we shot
 		if(_weaponAsset->_fireMode == EFireMode::Single)
