@@ -522,6 +522,9 @@ void AMyTournamentCharacter::OnWeaponIsEquipped(const FWeaponInInventoryEntry& w
 	weaponEntry._instance->_additionalSkeletalMesh->AttachToComponent(GetMesh(), attachmentRules, FName(TEXT("HandGrip_R")));
 	weaponEntry._instance->_additionalSkeletalMesh->SetOnlyOwnerSee(true);
 
+	// Subscribe to delegates
+	weaponEntry._instance->_onWeaponFiresPrimary.AddDynamic(this, &AMyTournamentCharacter::OnWeaponFiresPrimary);
+
 	// Update Anims
 	// Reset current _fpsAnimInstance before setting a new one
 	_fpsAnimInstance->ResetProperties();
@@ -573,6 +576,15 @@ FVector AMyTournamentCharacter::GetAimPoint_Implementation()
 	}
 
 	return targetPosition;
+}
+
+
+void AMyTournamentCharacter::OnWeaponFiresPrimary()
+{
+	_fpsAnimInstance->_bIsShooting = true;
+	_characterAnimInstance->_bIsShooting = true;
+
+	BP_OnWeaponFiresPrimary();
 }
 
 // Blueprints

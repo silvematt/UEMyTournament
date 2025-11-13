@@ -180,6 +180,7 @@ void AWeaponInstance::FireOneShot()
 		_ownersInventory->ConsumeAmmo(_weaponAsset->_ammoType, 1);
 		_muzzleFX->Activate(true);
 		_audioComponent->Play();
+		_onWeaponFiresPrimary.Broadcast();
 
 		// If this weapon is semi, release the trigger after we shot
 		if(_weaponAsset->_fireMode == EFireMode::Single)

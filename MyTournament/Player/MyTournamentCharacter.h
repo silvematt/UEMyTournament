@@ -213,6 +213,13 @@ protected:
 	virtual void BeginPlay() override;
 
 public:	
+	// Getters
+	UFUNCTION(BlueprintPure, Category = "Vitals")
+	UEntityVitalsComponent* GetVitalsComponent() const { return _vitalsComponent; }
+
+	UFUNCTION(BlueprintPure, Category = "Inventory")
+	UInventoryComponent* GetInventoryComponent() const { return _inventoryComponent; }
+
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -271,18 +278,17 @@ public:
 	UFUNCTION()
 	FVector GetAimPoint_Implementation() override;
 
+	UFUNCTION()
+	void OnWeaponFiresPrimary();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void BP_OnWeaponFiresPrimary();
+
 	// Blueprint
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	bool BPF_IsWallRunning();
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	bool BPF_IsWallRunningRight();
-
-	// Getters
-	UFUNCTION(BlueprintPure, Category = "Vitals")
-	UEntityVitalsComponent* GetVitalsComponent() const { return _vitalsComponent; }
-
-	UFUNCTION(BlueprintPure, Category = "Inventory")
-	UInventoryComponent* GetInventoryComponent() const { return _inventoryComponent; }
 };
 

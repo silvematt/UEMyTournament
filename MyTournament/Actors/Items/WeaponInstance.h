@@ -14,6 +14,8 @@ class UInputAction;
 class AProjectile;
 class UNiagaraComponent;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponFiresSignature);
+
 UCLASS()
 class MYTOURNAMENT_API AWeaponInstance : public AActor
 {
@@ -83,6 +85,11 @@ public:
 	// Debugs the raycast shot if this weapon doesn't instantiate bullets
 	UPROPERTY(EditAnywhere)
 	bool _debugRaycastBullet = false;
+
+public:
+	// Delegates
+	FOnWeaponFiresSignature _onWeaponFiresPrimary;
+
 
 protected:
 	// Called when the game starts or when spawned

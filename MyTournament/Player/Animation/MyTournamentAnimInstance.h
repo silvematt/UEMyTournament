@@ -18,6 +18,9 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Animation")
 	bool _bIsDashing = false;
 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Animation")
+	bool _bIsShooting = false;
+
 	// Resets the custom properties to default, useful when switching AnimInstances
 	UFUNCTION()
 	void ResetProperties();
