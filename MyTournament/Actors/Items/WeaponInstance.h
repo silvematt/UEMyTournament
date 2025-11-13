@@ -27,7 +27,7 @@ public:
 
 // Properties
 protected:
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<AActor> _weaponOwner;
 
 	UPROPERTY()

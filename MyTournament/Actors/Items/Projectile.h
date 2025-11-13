@@ -37,6 +37,9 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Projectile | Status")
 	TObjectPtr<AWeaponInstance> _weaponThatShot;
 
+	UPROPERTY(BlueprintReadOnly, Category = "Projectile | Status")
+	TSubclassOf<AActor> _impactVFX;
+
 public:
 	UPROPERTY(BlueprintReadOnly, Category = "Projectile | Status")
 	bool _shot = false; // if shot is true, then we check for collision. If shot is false this projectile is still initializing
@@ -46,6 +49,25 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Projectile | Settings")
 	float _lifespan = 10.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Projectile | Explosion | Settings")
+	bool _isAnExplosiveBullet = false;
+
+	UPROPERTY(EditAnywhere, Category = "Projectile | Explosion | Settings", meta = (EditCondition = "_isAnExplosiveBullet == true", EditConditionHides))
+	float _explosionRadius = 500.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Projectile | Explosion | Settings", meta = (EditCondition = "_isAnExplosiveBullet == true", EditConditionHides))
+	float _explosionForce = 100.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Projectile | Explosion | Settings", meta = (EditCondition = "_isAnExplosiveBullet == true", EditConditionHides))
+	bool _launchCharactersOnExplosionHit = true;
+
+	UPROPERTY(EditAnywhere, Category = "Projectile | Explosion | Settings", meta = (EditCondition = "_isAnExplosiveBullet == true", EditConditionHides))
+	float _explosionLaunchHorizontalForce = 300.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Projectile | Explosion | Settings", meta = (EditCondition = "_isAnExplosiveBullet == true", EditConditionHides))
+	float _explosionLaunchVerticalForce = 300.0f;
+
 
 // Methods
 protected:
@@ -60,7 +82,13 @@ public:
 	UFUNCTION()
 	void InitializeProjectile(AActor* actorThatShot, AWeaponInstance* weaponThatShot);
 
-	// Called when the projectile collides with an object
+	//UFUNCTION()
+	//void OnOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	
+	// Explosion are managed with OnHit
 	UFUNCTION()
-	void OnOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+
+	UFUNCTION()
+	void ExplosionCheck(const FVector& center);
 };

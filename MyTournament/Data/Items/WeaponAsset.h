@@ -15,7 +15,8 @@ enum class EWeaponSlot : uint8
 	Slot0 = 0 UMETA(Hidden), //Slot0 means not-initialized
 	Slot1 = 1, 
 	Slot2 = 2,
-	Slot3 = 3
+	Slot3 = 3,
+	Slot4 = 4
 };
 
 UENUM(BlueprintType)

@@ -4,6 +4,7 @@
 #include "Projectile.h"
 #include "Components/SphereComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "GameFramework/Character.h"
 #include "../../Data/Items/WeaponAsset.h"
 #include "../../Actors/Items/WeaponInstance.h"
 #include "../Components/EntityVitalsComponent.h"
@@ -30,7 +31,8 @@ AProjectile::AProjectile()
 
 	// Callback on projectile hits something
 	_collisionComponent->SetGenerateOverlapEvents(true);
-	_collisionComponent->OnComponentBeginOverlap.AddDynamic(this, &AProjectile::OnOverlap);
+	//_collisionComponent->OnComponentBeginOverlap.AddDynamic(this, &AProjectile::OnOverlap);
+	_collisionComponent->OnComponentHit.AddDynamic(this, &AProjectile::OnHit);
 
 	// Set hierarchy
 	RootComponent = _collisionComponent;
@@ -51,14 +53,17 @@ void AProjectile::InitializeProjectile(AActor* actorThatShot, AWeaponInstance* w
 	_actorThatShot = actorThatShot;
 	_weaponThatShot = weaponThatShot;
 
+	// Ignore the actor that shot this bullet
+	_collisionComponent->IgnoreActorWhenMoving(actorThatShot, true);
+
 	_shot = true;
 }
 
 // Called when the game starts or when spawned
 void AProjectile::BeginPlay()
 {
-	Super::BeginPlay();
-	
+	Super::BeginPlay();	
+
 }
 
 // Called every frame
@@ -68,7 +73,7 @@ void AProjectile::Tick(float DeltaTime)
 
 }
 
-void AProjectile::OnOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	if (!_shot)
 		return;
@@ -78,16 +83,86 @@ void AProjectile::OnOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherAc
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FString::Printf(TEXT("Hit %s"), *OtherActor->GetName()));
 
-		// Check if the actor hit has vitals
-		if (auto* comp = OtherActor->FindComponentByClass<UEntityVitalsComponent>())
+		if (_isAnExplosiveBullet)
 		{
-			float dmg = _weaponThatShot->_weaponAsset->_damage;
-			IDamageable::Execute_ApplyDamage(comp, dmg);
+			// Perform explosion
+			ExplosionCheck(GetActorLocation());
+		}
+		else // Normal bullet
+		{
+			// Check if the actor hit has vitals
+			if (auto* comp = OtherActor->FindComponentByClass<UEntityVitalsComponent>())
+			{
+				float dmg = _weaponThatShot->_weaponAsset->_damage;
+				IDamageable::Execute_ApplyDamage(comp, dmg);
+			}
 		}
 
-		if(OtherComp->IsSimulatingPhysics())
+		if (OtherComp->IsSimulatingPhysics())
 			OtherComp->AddImpulseAtLocation(GetVelocity().GetSafeNormal() * _weaponThatShot->_weaponAsset->_impulseForceOnHit, GetActorLocation());
 
+		// Spawn VFX if set
+		if (_impactVFX)
+		{
+			const FTransform SpawnTM(Hit.ImpactNormal.Rotation(), Hit.ImpactPoint);
+
+			GetWorld()->SpawnActor<AActor>(_impactVFX, SpawnTM);
+		}
+
 		Destroy();
+	}
+}
+
+void AProjectile::ExplosionCheck(const FVector& center)
+{
+	// Sphere overlap check look for nearby actors to damage
+	TArray<FOverlapResult> overlaps;
+
+	FCollisionShape overlapSphere;
+	overlapSphere.SetSphere(_explosionRadius);
+
+	FCollisionObjectQueryParams objectParams;
+	objectParams.AddObjectTypesToQuery(ECC_Pawn);
+	objectParams.AddObjectTypesToQuery(ECC_WorldDynamic);
+	objectParams.AddObjectTypesToQuery(ECC_PhysicsBody);
+
+	FCollisionQueryParams queryParams;
+
+	GetWorld()->OverlapMultiByObjectType(overlaps, center, FQuat::Identity, objectParams, overlapSphere, queryParams);
+
+	TArray<AActor*> damagedActors;
+
+	// Process the overlap results
+	for (const FOverlapResult& CurrentOverlap : overlaps)
+	{
+		// Overlaps may return the same actor multiple times per each component overlapped
+		// ensure we only damage each actor once by adding it to a damaged list
+		if (damagedActors.Find(CurrentOverlap.GetActor()) == INDEX_NONE)
+		{
+			damagedActors.Add(CurrentOverlap.GetActor());
+
+			// Apply physics force away from the explosion
+			const FVector& explosionDirection = CurrentOverlap.GetActor()->GetActorLocation() - GetActorLocation();
+
+			// Check if the actor hit has vitals
+			if (auto* comp = CurrentOverlap.GetActor()->FindComponentByClass<UEntityVitalsComponent>())
+			{
+				float dmg = _weaponThatShot->_weaponAsset->_damage;
+				IDamageable::Execute_ApplyDamage(comp, dmg);
+
+				if(_launchCharactersOnExplosionHit)
+					if (ACharacter* hitCharacter = Cast<ACharacter>(CurrentOverlap.GetActor()))
+					{
+						// Tune these values to taste
+						FVector launchVelocity = explosionDirection.GetSafeNormal() * _explosionLaunchHorizontalForce;
+						launchVelocity.Z += _explosionLaunchVerticalForce;
+
+						hitCharacter->LaunchCharacter(launchVelocity, true, true);
+					}
+			}
+
+			if (CurrentOverlap.GetComponent()->IsSimulatingPhysics())
+				CurrentOverlap.GetComponent()->AddImpulseAtLocation(explosionDirection * _explosionForce, GetActorLocation());
+		}
 	}
 }
