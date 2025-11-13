@@ -92,20 +92,22 @@ void UMyTournamentUI::HandleOnWeaponIsEquipped(const FWeaponInInventoryEntry& ne
 	// Attempt to load weapon icon
 	auto& wIcon = newWeapon._asset->_weaponIcon;
 	if (!wIcon.IsNull())
+	{
 		if (!wIcon.IsValid())
-		{
 			wIcon.LoadSynchronous();
-			_weaponIcon->SetBrushFromTexture(wIcon.Get());
-		}
+
+		_weaponIcon->SetBrushFromTexture(wIcon.Get());
+	}
 
 	// Attempt to load ammo icon
 	auto& aIcon = newWeapon._asset->_ammoType->_ammoIcon;
 	if (!aIcon.IsNull())
+	{
 		if (!aIcon.IsValid())
-		{
 			aIcon.LoadSynchronous();
-			_ammoIcon->SetBrushFromTexture(aIcon.Get());
-		}
+
+		_ammoIcon->SetBrushFromTexture(aIcon.Get());
+	}
 
 	_ammoCountValue->SetText(FText::AsNumber(_playerInventory->GetCurrentWeaponAmmoCount()));
 }
