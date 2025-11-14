@@ -33,6 +33,9 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UInventoryComponent> _ownersInventory;
 
+	// Array containing the input handles bound during instantiating this weapon (player only)
+	TArray<int32> _inputBoundHandles;
+
 public:
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UWeaponAsset> _weaponAsset;
@@ -110,6 +113,10 @@ public:
 	// Player-Only, binds the IA to AWeaponInstance functions
 	UFUNCTION()
 	void BindFirePrimaryAction(const UInputAction* InputToBind);
+
+	// Player-Only, unbinds the IA on weapons deactivation/destroy
+	UFUNCTION()
+	void UnbindInputActions();
 
 	// Must be done as soon as this weapon instance is spawned
 	UFUNCTION()

@@ -47,8 +47,31 @@ void AWeaponInstance::BindFirePrimaryAction(const UInputAction* InputToBind)
 		if (UEnhancedInputComponent* enhancedInputComponent = Cast<UEnhancedInputComponent>(pc->InputComponent))
 		{
 			// Fire
-			enhancedInputComponent->BindAction(InputToBind, ETriggerEvent::Started, this, &AWeaponInstance::FirePrimary);
-			enhancedInputComponent->BindAction(InputToBind, ETriggerEvent::Completed, this, &AWeaponInstance::StopFiring);
+			auto& bind1 = enhancedInputComponent->BindAction(InputToBind, ETriggerEvent::Started, this, &AWeaponInstance::FirePrimary);
+			auto& bind2 = enhancedInputComponent->BindAction(InputToBind, ETriggerEvent::Completed, this, &AWeaponInstance::StopFiring);
+
+			_inputBoundHandles.Add(bind1.GetHandle());
+			_inputBoundHandles.Add(bind2.GetHandle());
+
+			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Done!"));
+		}
+	}
+}
+
+void AWeaponInstance::UnbindInputActions()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Attempting to unbind AWeaponInstance FirePrimary to Player"));
+
+	// Remove previously made bindings
+	if (AMyTournamentCharacter* pc = Cast<AMyTournamentCharacter>(_weaponOwner))
+	{
+		if (UEnhancedInputComponent* enhancedInputComponent = Cast<UEnhancedInputComponent>(pc->InputComponent))
+		{
+			for (int32 cur : _inputBoundHandles)
+				enhancedInputComponent->RemoveBindingByHandle(cur);
+
+			_inputBoundHandles.Reset();
+			
 			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Done!"));
 		}
 	}

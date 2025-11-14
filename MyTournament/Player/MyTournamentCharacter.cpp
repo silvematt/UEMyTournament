@@ -92,7 +92,8 @@ void AMyTournamentCharacter::BeginPlay()
 	// Begin Play order can vary, so we initialize sub-components here. This ensures deterministic initialization 
 	_vitalsComponent->CustomInitialize();
 	_myTournamentUI->CustomInitialize();
-	_inventoryComponent->CustomInitialize();
+	_inventoryComponent->CustomInitialize(this);
+	_inventoryComponent->BindWeaponSwitchActions();
 
 	GEngine->AddOnScreenDebugMessage(-1, 2.5f, FColor::Yellow, TEXT("MyTournamentCharacter initialized!"));
 }
@@ -550,8 +551,29 @@ void AMyTournamentCharacter::OnWeaponIsEquipped(const FWeaponInInventoryEntry& w
 
 void AMyTournamentCharacter::OnWeaponIsUnequipped(const FWeaponInInventoryEntry& weaponEntry)
 {
-	// Disable FP/TP weaponEntry._instance
 	// Unbind mapping context
+	APlayerController* playerController = Cast<APlayerController>(Controller);
+
+	if (playerController)
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* inputSubsystem = ULocalPlayer::GetSubsystem< UEnhancedInputLocalPlayerSubsystem>(playerController->GetLocalPlayer()))
+		{
+			inputSubsystem->RemoveMappingContext(weaponEntry._instance->_weaponMappingContext);
+		}
+	}
+
+	weaponEntry._instance->_onWeaponFiresPrimary.RemoveDynamic(this, &AMyTournamentCharacter::OnWeaponFiresPrimary);
+	weaponEntry._instance->UnbindInputActions();
+
+	// Reset Animator
+	_fpsMesh->SetAnimInstanceClass(_fpsDefaultAnim->GeneratedClass);
+	_fpsAnimInstance = Cast<UMyTournamentAnimInstance>(_fpsMesh->GetAnimInstance());
+
+	GetMesh()->SetAnimInstanceClass(_tpsDefaultAnim->GeneratedClass);
+	_characterAnimInstance = Cast<UMyTournamentAnimInstance>(GetMesh()->GetAnimInstance());
+
+	// Disable FP/TP weaponEntry._instance
+	weaponEntry._instance->Destroy();
 }
 
 // Returns the point hit by the center of the camera

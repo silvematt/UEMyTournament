@@ -8,6 +8,7 @@
 #include "InventoryComponent.generated.h"
 
 class AWeaponInstance;
+class UInputAction;
 
 USTRUCT(BlueprintType)
 struct FWeaponInInventoryEntry
@@ -45,6 +46,10 @@ public:
 
 // Properties
 protected:
+
+	UPROPERTY()
+	TObjectPtr<AActor> _inventoryOwner;
+
 	// Weapon the owner of this inventory has as soon as he spawns
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UWeaponAsset> _defaultWeapon;
@@ -61,6 +66,18 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	TMap<TObjectPtr<UAmmoType>, uint32> _ammo;
 
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UInputAction> _IAWeaponSlotOne;
+
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UInputAction> _IAWeaponSlotTwo;
+
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UInputAction> _IAWeaponSlotThree;
+
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UInputAction> _IAWeaponSlotFour;
+
 // Delegates
 public:
 	FOnWeaponIsAddedSignature _onWeaponIsAddedDelegate;
@@ -76,10 +93,14 @@ protected:
 public:	
 	// CustomInitialize is called by the owner of this component (like the player)
 	UFUNCTION()
-	void CustomInitialize();
+	void CustomInitialize(AActor* invOwner);
 
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+	// Player-Only, binds the IActions to AWeaponInstance functions
+	UFUNCTION()
+	void BindWeaponSwitchActions();
 
 	// Tries to add the weapon, this can fail if weapon is already in this inventory and ammo is maxed out
 	UFUNCTION()
@@ -106,4 +127,12 @@ public:
 	// Returns the ammo count of a specific type
 	UFUNCTION()
 	uint32 GetAmmoCount(UAmmoType* ammo);
+
+	UFUNCTION()
+	void SwitchWeaponInputAction(const FInputActionValue& Value, const EWeaponSlot slot);
+
+	UFUNCTION()
+	bool SwitchWeapon(EWeaponSlot slot);
+
+
 };

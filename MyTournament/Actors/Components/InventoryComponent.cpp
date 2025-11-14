@@ -3,6 +3,8 @@
 
 #include "InventoryComponent.h"
 #include "../Items/WeaponInstance.h"
+#include <MyTournament/Player/MyTournamentCharacter.h>
+#include <Kismet/KismetMathLibrary.h>
 
 // Sets default values for this component's properties
 UInventoryComponent::UInventoryComponent()
@@ -22,13 +24,33 @@ void UInventoryComponent::BeginPlay()
 
 }
 
-// CustomInitialize is called by the owner of this component (like the player)
-void UInventoryComponent::CustomInitialize()
+void UInventoryComponent::BindWeaponSwitchActions()
 {
+	// Set up action bindings
+	if (AMyTournamentCharacter* pc = Cast<AMyTournamentCharacter>(_inventoryOwner))
+	{
+		if (UEnhancedInputComponent* enhancedInputComponent = Cast<UEnhancedInputComponent>(pc->InputComponent))
+		{
+			// Fire
+			enhancedInputComponent->BindAction(_IAWeaponSlotOne, ETriggerEvent::Started, this, &UInventoryComponent::SwitchWeaponInputAction, EWeaponSlot::Slot1);
+			enhancedInputComponent->BindAction(_IAWeaponSlotTwo, ETriggerEvent::Started, this, &UInventoryComponent::SwitchWeaponInputAction, EWeaponSlot::Slot2);
+			enhancedInputComponent->BindAction(_IAWeaponSlotThree, ETriggerEvent::Started, this, &UInventoryComponent::SwitchWeaponInputAction, EWeaponSlot::Slot3);
+			enhancedInputComponent->BindAction(_IAWeaponSlotFour, ETriggerEvent::Started, this, &UInventoryComponent::SwitchWeaponInputAction, EWeaponSlot::Slot4);
+
+			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Done!"));
+		}
+	}
+}
+
+// CustomInitialize is called by the owner of this component (like the player)
+void UInventoryComponent::CustomInitialize(AActor* invOwner)
+{
+	_inventoryOwner = invOwner;
+
 	// Intialize
 	if (_defaultWeapon)
 	{
-		//TryAddWeapon(_defaultWeapon, _defaultWeaponAmmoCount);
+		TryAddWeapon(_defaultWeapon, _defaultWeaponAmmoCount);
 	}
 }
 
@@ -130,6 +152,11 @@ uint32 UInventoryComponent::GetAmmoCount(UAmmoType* ammo)
 	return _ammo[ammo];
 }
 
+void UInventoryComponent::SwitchWeaponInputAction(const FInputActionValue& Value, const EWeaponSlot slot)
+{
+	SwitchWeapon(slot);
+}
+
 void UInventoryComponent::ConsumeAmmo(UAmmoType* ammo, uint32 val)
 {
 	if (_currentWeaponSlot == EWeaponSlot::Slot0)
@@ -145,7 +172,24 @@ void UInventoryComponent::ConsumeAmmo(UAmmoType* ammo, uint32 val)
 
 bool UInventoryComponent::UnequipCurrentWeapon()
 {
-
 	_onWeaponIsUnequippedDelegate.Broadcast(_weapons[_currentWeaponSlot]);
+
+	_currentWeaponSlot = EWeaponSlot::Slot0;
 	return true;
+}
+
+bool UInventoryComponent::SwitchWeapon(EWeaponSlot slot)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, FString::Printf(TEXT("Change to %d"), static_cast<int32>(slot)));
+
+	// Check if a weapon in the asked slot is present in the inventory map
+	if (slot != _currentWeaponSlot && _weapons.Contains(slot))
+	{
+		if (_currentWeaponSlot != EWeaponSlot::Slot0)
+			UnequipCurrentWeapon();
+
+		return TryEquip(slot);
+	}
+	else // weapon was never picked up
+		return false;
 }
