@@ -525,6 +525,7 @@ void AMyTournamentCharacter::OnWeaponIsEquipped(const FWeaponInInventoryEntry& w
 
 	// Subscribe to delegates
 	weaponEntry._instance->_onWeaponFiresPrimary.AddDynamic(this, &AMyTournamentCharacter::OnWeaponFiresPrimary);
+	weaponEntry._instance->_onWeaponFiresSecondary.AddDynamic(this, &AMyTournamentCharacter::OnWeaponFiresSecondary);
 
 	// Update Anims
 	// Reset current _fpsAnimInstance before setting a new one
@@ -535,6 +536,14 @@ void AMyTournamentCharacter::OnWeaponIsEquipped(const FWeaponInInventoryEntry& w
 	_characterAnimInstance->ResetProperties();
 	GetMesh()->SetAnimInstanceClass(weaponEntry._instance->_tpsAnimBlueprint->GeneratedClass);
 	_characterAnimInstance = Cast<UMyTournamentAnimInstance>(GetMesh()->GetAnimInstance());
+
+	// Set aiming _aimingDownsightUW
+	if (weaponEntry._asset->_aimsDownsightAsSecondaryFire && weaponEntry._asset->_aimDownsightUWClass)
+	{
+		APlayerController* playerController = Cast<APlayerController>(Controller);
+		_currentAimingDownsightUW = CreateWidget<UUserWidget>(playerController, weaponEntry._asset->_aimDownsightUWClass);
+		_currentAimingDownsightUW->SetOwningPlayer(playerController);
+	}
 
 	// Bind Input and use MappingContext
 	APlayerController* playerController = Cast<APlayerController>(Controller);
@@ -547,6 +556,7 @@ void AMyTournamentCharacter::OnWeaponIsEquipped(const FWeaponInInventoryEntry& w
 		}
 	}
 	weaponEntry._instance->BindFirePrimaryAction(_firePrimaryAction);
+	weaponEntry._instance->BindFireSecondaryAction(_fireSecondaryAction);
 }
 
 void AMyTournamentCharacter::OnWeaponIsUnequipped(const FWeaponInInventoryEntry& weaponEntry)
@@ -563,7 +573,18 @@ void AMyTournamentCharacter::OnWeaponIsUnequipped(const FWeaponInInventoryEntry&
 	}
 
 	weaponEntry._instance->_onWeaponFiresPrimary.RemoveDynamic(this, &AMyTournamentCharacter::OnWeaponFiresPrimary);
+	weaponEntry._instance->_onWeaponFiresSecondary.RemoveDynamic(this, &AMyTournamentCharacter::OnWeaponFiresSecondary);
 	weaponEntry._instance->UnbindInputActions();
+
+	// Remove Aim downsight
+	if (_currentAimingDownsightUW)
+	{
+		// If we switched while aiming, make sure clean up
+		_currentAimingDownsightUW->RemoveFromViewport();
+		_fpsMesh->SetVisibility(true, true);
+	}
+
+	_currentAimingDownsightUW = nullptr; // will be destroyed by GC
 
 	// Reset Animator
 	_fpsMesh->SetAnimInstanceClass(_fpsDefaultAnim->GeneratedClass);
@@ -607,6 +628,28 @@ void AMyTournamentCharacter::OnWeaponFiresPrimary()
 	_characterAnimInstance->_bIsShooting = true;
 
 	BP_OnWeaponFiresPrimary();
+}
+
+void AMyTournamentCharacter::OnWeaponFiresSecondary()
+{
+	if (auto curWeap = _inventoryComponent->GetCurrentWeaponAsset())
+	{
+		if (curWeap->_aimsDownsightAsSecondaryFire)
+		{
+			if (_currentAimingDownsightUW->IsInViewport())
+			{
+				// Remove UW from viewport and show fps mesh
+				_currentAimingDownsightUW->RemoveFromViewport();
+				_fpsMesh->SetVisibility(true, true);
+			}
+			else
+			{
+				// Add UW from viewport and hide fps mesh
+				_currentAimingDownsightUW->AddToViewport(0);
+				_fpsMesh->SetVisibility(false, true);
+			}
+		}
+	}
 }
 
 // Blueprints

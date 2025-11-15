@@ -9,6 +9,7 @@
 #include "../../Actors/Components/EntityVitalsComponent.h"
 #include "Components/AudioComponent.h"
 #include "NiagaraComponent.h"
+#include "Blueprint/UserWidget.h"
 #include <Kismet/KismetMathLibrary.h>
 
 // Sets default values
@@ -48,7 +49,28 @@ void AWeaponInstance::BindFirePrimaryAction(const UInputAction* InputToBind)
 		{
 			// Fire
 			auto& bind1 = enhancedInputComponent->BindAction(InputToBind, ETriggerEvent::Started, this, &AWeaponInstance::FirePrimary);
-			auto& bind2 = enhancedInputComponent->BindAction(InputToBind, ETriggerEvent::Completed, this, &AWeaponInstance::StopFiring);
+			auto& bind2 = enhancedInputComponent->BindAction(InputToBind, ETriggerEvent::Completed, this, &AWeaponInstance::StopFiringPrimary);
+
+			_inputBoundHandles.Add(bind1.GetHandle());
+			_inputBoundHandles.Add(bind2.GetHandle());
+
+			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Done!"));
+		}
+	}
+}
+
+void AWeaponInstance::BindFireSecondaryAction(const UInputAction* InputToBind)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Attempting to bind AWeaponInstance SecondaryFire to Player"));
+
+	// Set up action bindings
+	if (AMyTournamentCharacter* pc = Cast<AMyTournamentCharacter>(_weaponOwner))
+	{
+		if (UEnhancedInputComponent* enhancedInputComponent = Cast<UEnhancedInputComponent>(pc->InputComponent))
+		{
+			// Fire
+			auto& bind1 = enhancedInputComponent->BindAction(InputToBind, ETriggerEvent::Started, this, &AWeaponInstance::FireSecondary);
+			auto& bind2 = enhancedInputComponent->BindAction(InputToBind, ETriggerEvent::Completed, this, &AWeaponInstance::StopFiringSecondary);
 
 			_inputBoundHandles.Add(bind1.GetHandle());
 			_inputBoundHandles.Add(bind2.GetHandle());
@@ -72,7 +94,7 @@ void AWeaponInstance::UnbindInputActions()
 
 			_inputBoundHandles.Reset();
 			
-			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Done!"));
+			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Unbinded all!"));
 		}
 	}
 }
@@ -131,7 +153,7 @@ void AWeaponInstance::HandleFiring()
 		{
 			_burstStarted = false;
 			_burstNumShot = 0;
-			StopFiring();
+			StopFiringPrimary();
 			// Dry fire
 			return;
 		}
@@ -148,7 +170,7 @@ void AWeaponInstance::HandleFiring()
 		if (_ownersInventory->GetCurrentWeaponAmmoCount() <= 0)
 		{
 			// Dry fire
-			StopFiring();
+			StopFiringPrimary();
 			return;
 		}
 		if (_fireTimer >= _weaponAsset->_fireRate)
@@ -165,9 +187,23 @@ void AWeaponInstance::FirePrimary()
 	_bIsTriggerHeld = true;
 }
 
-void AWeaponInstance::StopFiring()
+void AWeaponInstance::StopFiringPrimary()
 {
 	_bIsTriggerHeld = false;
+}
+
+void AWeaponInstance::FireSecondary()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("SECONDFiring the weapon!"));
+
+	b_IsSecondTriggerHeld = true;
+
+	_onWeaponFiresSecondary.Broadcast();
+}
+
+void AWeaponInstance::StopFiringSecondary()
+{
+	b_IsSecondTriggerHeld = false;
 }
 
 void AWeaponInstance::FireOneShot()
@@ -207,7 +243,7 @@ void AWeaponInstance::FireOneShot()
 
 		// If this weapon is semi, release the trigger after we shot
 		if(_weaponAsset->_fireMode == EFireMode::Single)
-			StopFiring();
+			StopFiringPrimary();
 		// Burst Logic
 		else if (_weaponAsset->_fireMode == EFireMode::Burst)
 		{
@@ -220,7 +256,7 @@ void AWeaponInstance::FireOneShot()
 			{
 				_burstStarted = false;
 				_burstNumShot = 0;
-				StopFiring();
+				StopFiringPrimary();
 			}
 		}
 	}

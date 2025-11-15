@@ -134,5 +134,7 @@ public:
 	UFUNCTION()
 	bool SwitchWeapon(EWeaponSlot slot);
 
+	UFUNCTION()
+	UWeaponAsset* GetCurrentWeaponAsset();
 
 };

@@ -78,4 +78,11 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon | Core")
 	TObjectPtr<UAmmoType> _ammoType;
+
+	// Aim Downsight as fire secondary
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	bool _aimsDownsightAsSecondaryFire = false;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TSubclassOf<UUserWidget> _aimDownsightUWClass;
 };

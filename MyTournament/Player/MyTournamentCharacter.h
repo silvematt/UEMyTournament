@@ -52,6 +52,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> _firePrimaryAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	TObjectPtr<UInputAction> _fireSecondaryAction;
+
 	UPROPERTY(VisibleAnywhere, Category = "Input")
 	FVector2D _movementVector;
 
@@ -130,7 +133,11 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "HUD")
 	TSubclassOf<UMyTournamentUI> _myTournamentUIClass;
 
+	UPROPERTY()
 	TObjectPtr<UMyTournamentUI> _myTournamentUI;
+
+	UPROPERTY()
+	TObjectPtr<UUserWidget> _currentAimingDownsightUW;
 
 	// Vitals
 	UPROPERTY(VisibleAnywhere, Category = "Vitals")
@@ -280,6 +287,11 @@ public:
 
 	UFUNCTION()
 	void OnWeaponFiresPrimary();
+
+	UFUNCTION()
+	void OnWeaponFiresSecondary();
+
+	void OnWeaponFiresSecondaryEnds();
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void BP_OnWeaponFiresPrimary();

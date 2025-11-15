@@ -15,6 +15,8 @@ class AProjectile;
 class UNiagaraComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponFiresSignature);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponFiresSecondarySignature);
+
 
 UCLASS()
 class MYTOURNAMENT_API AWeaponInstance : public AActor
@@ -73,6 +75,9 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	bool _bIsTriggerHeld = false;
 
+	UPROPERTY(VisibleAnywhere)
+	bool b_IsSecondTriggerHeld = false;
+
 	// Allows to shoot at the set fire rate
 	UPROPERTY(VisibleAnywhere)
 	float _fireTimer = 0.0f;;
@@ -92,6 +97,7 @@ public:
 public:
 	// Delegates
 	FOnWeaponFiresSignature _onWeaponFiresPrimary;
+	FOnWeaponFiresSecondarySignature _onWeaponFiresSecondary;
 
 
 protected:
@@ -114,6 +120,9 @@ public:
 	UFUNCTION()
 	void BindFirePrimaryAction(const UInputAction* InputToBind);
 
+	UFUNCTION()
+	void BindFireSecondaryAction(const UInputAction* InputToBind);
+
 	// Player-Only, unbinds the IA on weapons deactivation/destroy
 	UFUNCTION()
 	void UnbindInputActions();
@@ -131,7 +140,15 @@ public:
 
 	// Called on input release or if the weapons has to stop firing
 	UFUNCTION()
-	void StopFiring();
+	void StopFiringPrimary();
+
+	// FireSecondary input action
+	UFUNCTION()
+	void FireSecondary();
+
+	// Called on input release or if the weapons has to stop firing
+	UFUNCTION()
+	void StopFiringSecondary();
 
 	// Fires one shot at the _weaponAssets conditions
 	UFUNCTION()

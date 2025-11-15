@@ -193,3 +193,13 @@ bool UInventoryComponent::SwitchWeapon(EWeaponSlot slot)
 	else // weapon was never picked up
 		return false;
 }
+
+UWeaponAsset* UInventoryComponent::GetCurrentWeaponAsset()
+{
+	if (_currentWeaponSlot != EWeaponSlot::Slot0)
+	{
+		return(_weapons[_currentWeaponSlot]._asset);
+	}
+
+	return nullptr;
+}
