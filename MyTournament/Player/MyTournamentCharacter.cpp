@@ -582,6 +582,7 @@ void AMyTournamentCharacter::OnWeaponIsUnequipped(const FWeaponInInventoryEntry&
 		// If we switched while aiming, make sure clean up
 		_currentAimingDownsightUW->RemoveFromViewport();
 		_fpsMesh->SetVisibility(true, true);
+		_cameraComponent->SetFieldOfView(_cameraFOV);
 	}
 
 	_currentAimingDownsightUW = nullptr; // will be destroyed by GC
@@ -641,12 +642,14 @@ void AMyTournamentCharacter::OnWeaponFiresSecondary()
 				// Remove UW from viewport and show fps mesh
 				_currentAimingDownsightUW->RemoveFromViewport();
 				_fpsMesh->SetVisibility(true, true);
+				_cameraComponent->SetFieldOfView(_cameraFOV);
 			}
 			else
 			{
 				// Add UW from viewport and hide fps mesh
 				_currentAimingDownsightUW->AddToViewport(0);
 				_fpsMesh->SetVisibility(false, true);
+				_cameraComponent->SetFieldOfView(curWeap->_aimDownsightFOV);
 			}
 		}
 	}

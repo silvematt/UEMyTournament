@@ -213,11 +213,16 @@ void AWeaponInstance::FireOneShot()
 	// Make sure weaponOwner is valid and implements IWeaponOperator
 	if (IsValid(_weaponOwner) && _weaponOwner->GetClass()->ImplementsInterface(UWeaponOperator::StaticClass()))
 	{
+		FVector targetPosition = IWeaponOperator::Execute_GetAimPoint(_weaponOwner);
+
+		// Add weapon spread
+		const float weaponSpread = (b_IsSecondTriggerHeld && _weaponAsset->_aimsDownsightAsSecondaryFire) ? _weaponAsset->_weaponSpreadAimfire : _weaponAsset->_weaponSpreadHipfire;
+
+		targetPosition += FVector(FMath::RandRange(-weaponSpread, weaponSpread), FMath::RandRange(-weaponSpread, weaponSpread), FMath::RandRange(-weaponSpread, weaponSpread));
+
 		// Physical Bullet
 		if (_weaponAsset->_shootingType == EShootingType::Bullet)
 		{
-			FVector targetPosition = IWeaponOperator::Execute_GetAimPoint(_weaponOwner);
-
 			// Get the correct socket to spawn the projectile from
 			FVector socketLocation = _skeletalMesh->GetSocketLocation("Muzzle");
 			FRotator spawnRotation = UKismetMathLibrary::FindLookAtRotation(socketLocation, targetPosition);
@@ -228,7 +233,6 @@ void AWeaponInstance::FireOneShot()
 		// RaycastBullet
 		else if (_weaponAsset->_shootingType == EShootingType::Raycast)
 		{
-			FVector targetPosition = IWeaponOperator::Execute_GetAimPoint(_weaponOwner);
 			FVector socketLocation = _skeletalMesh->GetSocketLocation("Muzzle");
 			FRotator spawnRotation = UKismetMathLibrary::FindLookAtRotation(socketLocation, targetPosition);
 			FVector start = socketLocation + UKismetMathLibrary::GetForwardVector(spawnRotation) * 10.0;

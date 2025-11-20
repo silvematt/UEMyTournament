@@ -85,4 +85,13 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TSubclassOf<UUserWidget> _aimDownsightUWClass;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	float _aimDownsightFOV = 50.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	float _weaponSpreadHipfire = 0.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	float _weaponSpreadAimfire = 0.0f;
 };
