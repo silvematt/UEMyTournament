@@ -665,3 +665,14 @@ bool AMyTournamentCharacter::BPF_IsWallRunningRight()
 {
 	return _wallRunIsWallRunningRight;
 }
+
+bool AMyTournamentCharacter::BPF_ActivateCurrentWeapon()
+{
+	if (auto weap = _inventoryComponent->GetCurrentWeapon())
+	{
+		weap->SetWeaponActivated(true);
+		return true;
+	}
+
+	return false;
+}

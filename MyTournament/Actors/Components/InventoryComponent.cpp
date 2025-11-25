@@ -203,3 +203,14 @@ UWeaponAsset* UInventoryComponent::GetCurrentWeaponAsset()
 
 	return nullptr;
 }
+
+AWeaponInstance* UInventoryComponent::GetCurrentWeapon()
+{
+	if (_currentWeaponSlot != EWeaponSlot::Slot0)
+	{
+		return(_weapons[_currentWeaponSlot]._instance);
+	}
+
+	return nullptr;
+}
+

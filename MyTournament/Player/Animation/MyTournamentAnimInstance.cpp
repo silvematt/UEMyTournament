@@ -5,5 +5,7 @@
 
 void UMyTournamentAnimInstance::ResetProperties()
 {
+	_bIsWeaponDrawn = false;
 	_bIsDashing = false;
+	_bIsShooting = false;
 }

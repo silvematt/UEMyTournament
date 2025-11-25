@@ -38,6 +38,9 @@ protected:
 	// Array containing the input handles bound during instantiating this weapon (player only)
 	TArray<int32> _inputBoundHandles;
 
+	UPROPERTY()
+	bool _isWeaponActivated = false; // becomes true when the weapon is drawn on switch
+
 public:
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UWeaponAsset> _weaponAsset;
@@ -157,4 +160,7 @@ public:
 	// Firing Handling called in Tick()
 	UFUNCTION()
 	void HandleFiring();
+
+	UFUNCTION()
+	void SetWeaponActivated(bool v) { _isWeaponActivated = v; }
 };

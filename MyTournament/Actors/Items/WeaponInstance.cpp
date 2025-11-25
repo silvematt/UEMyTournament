@@ -183,6 +183,10 @@ void AWeaponInstance::HandleFiring()
 
 void AWeaponInstance::FirePrimary()
 {
+	// Weapon Activated means isDrawn, _isWeaponActivated is set to true as soon as the draw animation ends on the FP_AnimInstance 
+	if (!_isWeaponActivated)
+		return;
+
 	// if(_fireTimer >= _weaponAsset->_fireRate) If the weapon can't fire, you may not want to pick up the input (you can double tap for continuous burst otherwise), but it can feel more clunky
 	_bIsTriggerHeld = true;
 }
@@ -194,6 +198,9 @@ void AWeaponInstance::StopFiringPrimary()
 
 void AWeaponInstance::FireSecondary()
 {
+	if (!_isWeaponActivated)
+		return;
+
 	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("SECONDFiring the weapon!"));
 
 	b_IsSecondTriggerHeld = true;

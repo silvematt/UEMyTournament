@@ -302,5 +302,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	bool BPF_IsWallRunningRight();
+
+	UFUNCTION(BlueprintCallable)
+	bool BPF_ActivateCurrentWeapon();
 };
 

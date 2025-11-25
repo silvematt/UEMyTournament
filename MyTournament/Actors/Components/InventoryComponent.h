@@ -137,4 +137,7 @@ public:
 	UFUNCTION()
 	UWeaponAsset* GetCurrentWeaponAsset();
 
+	UFUNCTION()
+	AWeaponInstance* GetCurrentWeapon();
+
 };
