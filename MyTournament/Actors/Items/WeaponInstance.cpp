@@ -240,11 +240,14 @@ void AWeaponInstance::FireOneShot()
 		// RaycastBullet
 		else if (_weaponAsset->_shootingType == EShootingType::Raycast)
 		{
-			FVector socketLocation = _skeletalMesh->GetSocketLocation("Muzzle");
-			FRotator spawnRotation = UKismetMathLibrary::FindLookAtRotation(socketLocation, targetPosition);
-			FVector start = socketLocation + UKismetMathLibrary::GetForwardVector(spawnRotation) * 10.0;
+			const FVector muzzleLoc = _skeletalMesh->GetSocketLocation("Muzzle");
+			
+			const FVector shotDir = (targetPosition - muzzleLoc).GetSafeNormal();
 
-			RaycastBullet(start, targetPosition);
+			const FVector start = muzzleLoc + shotDir * 10.0f; // 10 is muzzle offset
+			const FVector end = start + shotDir * _weaponAsset->_range;
+
+			RaycastBullet(start, end);
 		}
 
 		_ownersInventory->ConsumeAmmo(_weaponAsset->_ammoType, 1);
@@ -302,13 +305,13 @@ void AWeaponInstance::RaycastBullet(FVector start, FVector end)
 	// Trace the wall, so we can stick to it
 	FHitResult hitRes;
 
-	const ECollisionChannel WeaponRaycast = ECollisionChannel::ECC_GameTraceChannel2; // safer than hardcoding
+	const ECollisionChannel WeaponRaycast = ECollisionChannel::ECC_GameTraceChannel2;
 	FCollisionQueryParams collParams(SCENE_QUERY_STAT(WeaponRaycast), false);
 	collParams.AddIgnoredActor(this);
 	collParams.AddIgnoredActor(_weaponOwner);
 
 	// Debug the trace
-	if(_debugRaycastBullet)
+	if (_debugRaycastBullet)
 		DrawDebugLine(GetWorld(), start, end, FColor::Red, false, 3.0f, 0, 1.0f);
 
 	// Check if we're still attached to the wall (if the player looks away, this will fail, so the 'else' will correctly deatach him from the wall)

@@ -614,7 +614,14 @@ FVector AMyTournamentCharacter::GetAimPoint_Implementation()
 		// Simulate a line trace from the character along the vector they're looking down
 		const FVector traceStart = _cameraComponent->GetComponentLocation();
 		const FVector traceEnd = traceStart + _cameraComponent->GetForwardVector() * 10000.0;
-		World->LineTraceSingleByChannel(hitRes, traceStart, traceEnd, ECollisionChannel::ECC_Visibility);
+
+		FCollisionQueryParams collParams(SCENE_QUERY_STAT(AimTrace), true);
+		collParams.AddIgnoredActor(this);
+
+		if(auto weap = _inventoryComponent->GetCurrentWeapon())
+			collParams.AddIgnoredActor(weap);
+
+		World->LineTraceSingleByChannel(hitRes, traceStart, traceEnd, ECollisionChannel::ECC_Visibility, collParams);
 
 		// Set the target position to the impact point of the hit or the end of the trace depending on whether it hit an object
 		targetPosition = hitRes.bBlockingHit ? hitRes.ImpactPoint : hitRes.TraceEnd;
