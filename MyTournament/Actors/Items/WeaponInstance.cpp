@@ -223,7 +223,7 @@ void AWeaponInstance::FireOneShot()
 		FVector targetPosition = IWeaponOperator::Execute_GetAimPoint(_weaponOwner);
 
 		// Add weapon spread
-		const float weaponSpread = (b_IsSecondTriggerHeld && _weaponAsset->_aimsDownsightAsSecondaryFire) ? _weaponAsset->_weaponSpreadAimfire : _weaponAsset->_weaponSpreadHipfire;
+		const float weaponSpread = (b_IsAimingDownsight && _weaponAsset->_aimsDownsightAsSecondaryFire) ? _weaponAsset->_weaponSpreadAimfire : _weaponAsset->_weaponSpreadHipfire;
 
 		targetPosition += FVector(FMath::RandRange(-weaponSpread, weaponSpread), FMath::RandRange(-weaponSpread, weaponSpread), FMath::RandRange(-weaponSpread, weaponSpread));
 
@@ -333,6 +333,14 @@ void AWeaponInstance::RaycastBullet(FVector start, FVector end)
 			const FVector impulse = shotDir * _weaponAsset->_impulseForceOnHit;
 
 			otherComponent->AddImpulseAtLocation(impulse, hitRes.ImpactPoint);
+		}
+
+		// Spawn VFX if set
+		if (_weaponAsset->_impactVFX)
+		{
+			const FTransform SpawnTM(hitRes.ImpactNormal.Rotation(), hitRes.ImpactPoint);
+
+			GetWorld()->SpawnActor<AActor>(_weaponAsset->_impactVFX, SpawnTM);
 		}
 	}
 }

@@ -81,6 +81,9 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	bool b_IsSecondTriggerHeld = false;
 
+	UPROPERTY(VisibleAnywhere)
+	bool b_IsAimingDownsight = false;
+
 	// Allows to shoot at the set fire rate
 	UPROPERTY(VisibleAnywhere)
 	float _fireTimer = 0.0f;;

@@ -55,6 +55,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon | Core")
 	EShootingType _shootingType = EShootingType::Raycast;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon | Core", meta = (EditCondition = "_shootingType == EShootingType::Raycast", EditConditionHides))
+	TSubclassOf<AActor> _impactVFX;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon | Core")
 	EFireMode _fireMode = EFireMode::Single;
 
@@ -73,7 +76,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon | Core")
 	float _range = 10000.0f;
 
-	UPROPERTY(EditAnywhere, Category = "Projectile | Settings")
+	UPROPERTY(EditAnywhere, Category = "Weapon | Core")
 	float _impulseForceOnHit = 10000.0f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon | Core")

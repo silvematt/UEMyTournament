@@ -37,7 +37,7 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Projectile | Status")
 	TObjectPtr<AWeaponInstance> _weaponThatShot;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Projectile | Status")
+	UPROPERTY(EditDefaultsOnly, Category = "Projectile | Status")
 	TSubclassOf<AActor> _impactVFX;
 
 public:

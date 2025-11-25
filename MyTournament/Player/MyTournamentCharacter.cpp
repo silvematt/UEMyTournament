@@ -583,6 +583,7 @@ void AMyTournamentCharacter::OnWeaponIsUnequipped(const FWeaponInInventoryEntry&
 		_currentAimingDownsightUW->RemoveFromViewport();
 		_fpsMesh->SetVisibility(true, true);
 		_cameraComponent->SetFieldOfView(_cameraFOV);
+		_inventoryComponent->GetCurrentWeapon()->b_IsAimingDownsight = false;
 	}
 
 	_currentAimingDownsightUW = nullptr; // will be destroyed by GC
@@ -643,6 +644,7 @@ void AMyTournamentCharacter::OnWeaponFiresSecondary()
 				_currentAimingDownsightUW->RemoveFromViewport();
 				_fpsMesh->SetVisibility(true, true);
 				_cameraComponent->SetFieldOfView(_cameraFOV);
+				_inventoryComponent->GetCurrentWeapon()->b_IsAimingDownsight = false;
 			}
 			else
 			{
@@ -650,6 +652,7 @@ void AMyTournamentCharacter::OnWeaponFiresSecondary()
 				_currentAimingDownsightUW->AddToViewport(0);
 				_fpsMesh->SetVisibility(false, true);
 				_cameraComponent->SetFieldOfView(curWeap->_aimDownsightFOV);
+				_inventoryComponent->GetCurrentWeapon()->b_IsAimingDownsight = true;
 			}
 		}
 	}
