@@ -37,6 +37,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Vitals")
 	float _maxArmor = 0.0f;
 
+	UPROPERTY(EditAnywhere, Category = "Locational Damage")
+	TMap<FName, float> _locationalDamageMap;
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -89,4 +92,7 @@ public:
 
 	UFUNCTION() 
 	bool IsAtMaxArmor_Implementation() const override;
+
+	UFUNCTION()
+	float GetLocationalDamageMultiplier_Implementation(FName boneName) const override;
 };

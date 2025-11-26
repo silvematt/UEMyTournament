@@ -321,13 +321,16 @@ void AWeaponInstance::RaycastBullet(FVector start, FVector end)
 		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FString::Printf(TEXT("Hit %s"), *hitRes.GetActor()->GetName()));
 
 		AActor* otherActor = hitRes.GetActor();
+		
 		UPrimitiveComponent* otherComponent = hitRes.GetComponent();
 
 		// Check if the actor hit has vitals
 		if (auto* comp = otherActor->FindComponentByClass<UEntityVitalsComponent>())
 		{
 			float dmg = _weaponAsset->_damage;
-			IDamageable::Execute_ApplyDamage(comp, dmg);
+			float locationalMultiplier = IDamageable::Execute_GetLocationalDamageMultiplier(comp, hitRes.BoneName);
+			float finalDmg = dmg * locationalMultiplier;
+			IDamageable::Execute_ApplyDamage(comp, finalDmg);
 		}
 
 		// Add physics impulse

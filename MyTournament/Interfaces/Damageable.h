@@ -39,5 +39,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	bool IsAtMaxArmor() const;
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	float GetLocationalDamageMultiplier(FName boneName) const;
 };
 

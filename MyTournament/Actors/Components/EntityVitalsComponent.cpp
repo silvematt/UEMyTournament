@@ -94,3 +94,11 @@ bool UEntityVitalsComponent::IsAtMaxArmor_Implementation() const
 {
 	return _currentArmor >= _maxArmor;
 }
+
+float UEntityVitalsComponent::GetLocationalDamageMultiplier_Implementation(FName boneName) const
+{
+	if (_locationalDamageMap.Contains(boneName))
+		return _locationalDamageMap[boneName];
+
+	return 1.0f;
+}

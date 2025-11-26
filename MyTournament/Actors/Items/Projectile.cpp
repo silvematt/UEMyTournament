@@ -94,7 +94,10 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 			if (auto* comp = OtherActor->FindComponentByClass<UEntityVitalsComponent>())
 			{
 				float dmg = _weaponThatShot->_weaponAsset->_damage;
-				IDamageable::Execute_ApplyDamage(comp, dmg);
+				float locationalMultiplier = IDamageable::Execute_GetLocationalDamageMultiplier(comp, Hit.BoneName);
+				float finalDmg = dmg * locationalMultiplier;
+
+				IDamageable::Execute_ApplyDamage(comp, finalDmg);
 			}
 		}
 
