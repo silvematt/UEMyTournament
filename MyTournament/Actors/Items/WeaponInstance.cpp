@@ -221,9 +221,10 @@ void AWeaponInstance::FireOneShot()
 	if (IsValid(_weaponOwner) && _weaponOwner->GetClass()->ImplementsInterface(UWeaponOperator::StaticClass()))
 	{
 		FVector targetPosition = IWeaponOperator::Execute_GetAimPoint(_weaponOwner);
+		bool isAimingDownsight = IWeaponOperator::Execute_IsAimingDownsight(_weaponOwner);
 
 		// Add weapon spread
-		const float weaponSpread = (b_IsAimingDownsight && _weaponAsset->_aimsDownsightAsSecondaryFire) ? _weaponAsset->_weaponSpreadAimfire : _weaponAsset->_weaponSpreadHipfire;
+		const float weaponSpread = (isAimingDownsight && _weaponAsset->_aimsDownsightAsSecondaryFire) ? _weaponAsset->_weaponSpreadAimfire : _weaponAsset->_weaponSpreadHipfire;
 
 		targetPosition += FVector(FMath::RandRange(-weaponSpread, weaponSpread), FMath::RandRange(-weaponSpread, weaponSpread), FMath::RandRange(-weaponSpread, weaponSpread));
 

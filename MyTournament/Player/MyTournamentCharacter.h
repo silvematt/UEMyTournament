@@ -202,6 +202,16 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly, Category = "Inventory")
 	TObjectPtr<UInventoryComponent> _inventoryComponent;
 
+	// Other
+	UPROPERTY(VisibleAnywhere, Category = "State")
+	bool _isAimingDownsight = false;
+
+	UPROPERTY(VisibleAnywhere, Category = "State")
+	float _normalLookSensitivity = 1.0f;
+
+	UPROPERTY(VisibleAnywhere, Category = "State")
+	float _aimingDownsightLookSensitivity = 0.25f;
+
 public:
 	// Delegates
 	UPROPERTY(BlueprintAssignable)
@@ -286,12 +296,21 @@ public:
 	FVector GetAimPoint_Implementation() override;
 
 	UFUNCTION()
+	bool IsAimingDownsight_Implementation() override;
+
+	UFUNCTION()
 	void OnWeaponFiresPrimary();
 
 	UFUNCTION()
 	void OnWeaponFiresSecondary();
 
 	void OnWeaponFiresSecondaryEnds();
+
+	UFUNCTION()
+	void AimDownsight();
+
+	UFUNCTION()
+	void StopAimingDownsight();
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void BP_OnWeaponFiresPrimary();

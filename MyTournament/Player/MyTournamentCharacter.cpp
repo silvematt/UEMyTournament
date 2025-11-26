@@ -161,12 +161,14 @@ void AMyTournamentCharacter::Look(const FInputActionValue& inputValue)
 {
 	FVector2D lookVector = inputValue.Get<FVector2D>();
 
+	float currentLookSensitivity = (_isAimingDownsight) ? _aimingDownsightLookSensitivity : _normalLookSensitivity;
+
 	if (Controller)
 	{
-		AddControllerYawInput(lookVector.X);
-		//AddControllerPitchInput(lookVector.Y);  bUsePawnControlRotation is false now
+		AddControllerYawInput(lookVector.X * currentLookSensitivity);
+		//AddControllerPitchInput(lookVector.Y * currentLookSensitivity);  bUsePawnControlRotation is false now
 		
-		float deltaPitch = lookVector.Y * -2.5f;
+		float deltaPitch = lookVector.Y * -2.5f * currentLookSensitivity;
 
 		FRotator curRot = _cameraComponent->GetRelativeRotation();
 		curRot.Pitch = FMath::Clamp(FMath::UnwindDegrees(curRot.Pitch) + deltaPitch, -70.0f, 70.0f);
@@ -579,11 +581,7 @@ void AMyTournamentCharacter::OnWeaponIsUnequipped(const FWeaponInInventoryEntry&
 	// Remove Aim downsight
 	if (_currentAimingDownsightUW)
 	{
-		// If we switched while aiming, make sure clean up
-		_currentAimingDownsightUW->RemoveFromViewport();
-		_fpsMesh->SetVisibility(true, true);
-		_cameraComponent->SetFieldOfView(_cameraFOV);
-		_inventoryComponent->GetCurrentWeapon()->b_IsAimingDownsight = false;
+		StopAimingDownsight();
 	}
 
 	_currentAimingDownsightUW = nullptr; // will be destroyed by GC
@@ -647,22 +645,43 @@ void AMyTournamentCharacter::OnWeaponFiresSecondary()
 		{
 			if (_currentAimingDownsightUW->IsInViewport())
 			{
-				// Remove UW from viewport and show fps mesh
-				_currentAimingDownsightUW->RemoveFromViewport();
-				_fpsMesh->SetVisibility(true, true);
-				_cameraComponent->SetFieldOfView(_cameraFOV);
-				_inventoryComponent->GetCurrentWeapon()->b_IsAimingDownsight = false;
+				StopAimingDownsight();
 			}
 			else
 			{
-				// Add UW from viewport and hide fps mesh
-				_currentAimingDownsightUW->AddToViewport(0);
-				_fpsMesh->SetVisibility(false, true);
-				_cameraComponent->SetFieldOfView(curWeap->_aimDownsightFOV);
-				_inventoryComponent->GetCurrentWeapon()->b_IsAimingDownsight = true;
+				AimDownsight();
 			}
 		}
 	}
+}
+
+void AMyTournamentCharacter::AimDownsight()
+{
+	if (auto curWeap = _inventoryComponent->GetCurrentWeapon())
+	{
+		// Add UW from viewport and hide fps mesh
+		_currentAimingDownsightUW->AddToViewport(0);
+		_fpsMesh->SetVisibility(false, true);
+		_cameraComponent->SetFieldOfView(curWeap->_weaponAsset->_aimDownsightFOV);
+		_isAimingDownsight = true;
+	}
+}
+
+void AMyTournamentCharacter::StopAimingDownsight()
+{
+	if (auto curWeap = _inventoryComponent->GetCurrentWeapon())
+	{
+		// Remove UW from viewport and show fps mesh
+		_currentAimingDownsightUW->RemoveFromViewport();
+		_fpsMesh->SetVisibility(true, true);
+		_cameraComponent->SetFieldOfView(_cameraFOV);
+		_isAimingDownsight = false;
+	}
+}
+
+bool AMyTournamentCharacter::IsAimingDownsight_Implementation()
+{
+	return _isAimingDownsight;
 }
 
 // Blueprints

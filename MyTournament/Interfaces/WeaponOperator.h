@@ -27,4 +27,8 @@ public:
 	// For the AI it can be a calculation with noise
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	FVector GetAimPoint();
+
+	// Returns whether or not the weapon operator is aiming downsight
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	bool IsAimingDownsight();
 };
