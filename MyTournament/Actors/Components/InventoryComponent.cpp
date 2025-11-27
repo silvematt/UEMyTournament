@@ -36,8 +36,6 @@ void UInventoryComponent::BindWeaponSwitchActions()
 			enhancedInputComponent->BindAction(_IAWeaponSlotTwo, ETriggerEvent::Started, this, &UInventoryComponent::SwitchWeaponInputAction, EWeaponSlot::Slot2);
 			enhancedInputComponent->BindAction(_IAWeaponSlotThree, ETriggerEvent::Started, this, &UInventoryComponent::SwitchWeaponInputAction, EWeaponSlot::Slot3);
 			enhancedInputComponent->BindAction(_IAWeaponSlotFour, ETriggerEvent::Started, this, &UInventoryComponent::SwitchWeaponInputAction, EWeaponSlot::Slot4);
-
-			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Done!"));
 		}
 	}
 }
@@ -180,8 +178,6 @@ bool UInventoryComponent::UnequipCurrentWeapon()
 
 bool UInventoryComponent::SwitchWeapon(EWeaponSlot slot)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, FString::Printf(TEXT("Change to %d"), static_cast<int32>(slot)));
-
 	// Check if a weapon in the asked slot is present in the inventory map
 	if (slot != _currentWeaponSlot && _weapons.Contains(slot))
 	{

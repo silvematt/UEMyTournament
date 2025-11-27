@@ -81,8 +81,6 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 	// Only add impulse and destroy projectile if we hit a physics
 	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherActor != _actorThatShot) && (OtherComp != nullptr))
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FString::Printf(TEXT("Hit %s"), *OtherActor->GetName()));
-
 		if (_isAnExplosiveBullet)
 		{
 			// Perform explosion

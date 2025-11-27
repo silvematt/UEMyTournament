@@ -101,8 +101,6 @@ void APickupBase::OnMeshBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor
 			return;
 		}
 
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FString::Printf(TEXT("Player took pickup %s which is %s"), *GetName(), *_itemAsset->_ID.ToString()));
-
 		TakePickup(OtherActor);
 
 		// Deactivate the pickup 

@@ -40,8 +40,6 @@ AWeaponInstance::AWeaponInstance()
 // Player-Only, binds the IA to AWeaponInstance functions
 void AWeaponInstance::BindFirePrimaryAction(const UInputAction* InputToBind)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Attempting to bind AWeaponInstance FirePrimary to Player"));
-
 	// Set up action bindings
 	if (AMyTournamentCharacter* pc = Cast<AMyTournamentCharacter>(_weaponOwner))
 	{
@@ -53,16 +51,12 @@ void AWeaponInstance::BindFirePrimaryAction(const UInputAction* InputToBind)
 
 			_inputBoundHandles.Add(bind1.GetHandle());
 			_inputBoundHandles.Add(bind2.GetHandle());
-
-			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Done!"));
 		}
 	}
 }
 
 void AWeaponInstance::BindFireSecondaryAction(const UInputAction* InputToBind)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Attempting to bind AWeaponInstance SecondaryFire to Player"));
-
 	// Set up action bindings
 	if (AMyTournamentCharacter* pc = Cast<AMyTournamentCharacter>(_weaponOwner))
 	{
@@ -74,16 +68,12 @@ void AWeaponInstance::BindFireSecondaryAction(const UInputAction* InputToBind)
 
 			_inputBoundHandles.Add(bind1.GetHandle());
 			_inputBoundHandles.Add(bind2.GetHandle());
-
-			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Done!"));
 		}
 	}
 }
 
 void AWeaponInstance::UnbindInputActions()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Attempting to unbind AWeaponInstance FirePrimary to Player"));
-
 	// Remove previously made bindings
 	if (AMyTournamentCharacter* pc = Cast<AMyTournamentCharacter>(_weaponOwner))
 	{
@@ -93,8 +83,6 @@ void AWeaponInstance::UnbindInputActions()
 				enhancedInputComponent->RemoveBindingByHandle(cur);
 
 			_inputBoundHandles.Reset();
-			
-			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Unbinded all!"));
 		}
 	}
 }
@@ -129,6 +117,8 @@ void AWeaponInstance::BeginPlay()
 
 	_fireTimer = _weaponAsset->_fireRate;
 	_audioComponent->SetSound(_fireSound);
+
+	_spreadProgressiveAccumulation = 0.0f;
 }
 
 // Called every frame
@@ -140,6 +130,12 @@ void AWeaponInstance::Tick(float DeltaTime)
 	_fireTimer += 1 * DeltaTime;
 
 	HandleFiring();
+
+	// Cooldown spread
+	if (_weaponAsset->_weaponUsesProgressiveSpread && !_bIsTriggerHeld)
+	{
+		_spreadProgressiveAccumulation = FMath::Clamp(_spreadProgressiveAccumulation - _weaponAsset->_weaponProgressiveSpreadCooldownRate * DeltaTime, 0.0f, 1.0f);
+	}
 }
 
 void AWeaponInstance::HandleFiring()
@@ -201,8 +197,6 @@ void AWeaponInstance::FireSecondary()
 	if (!_isWeaponActivated)
 		return;
 
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("SECONDFiring the weapon!"));
-
 	b_IsSecondTriggerHeld = true;
 
 	_onWeaponFiresSecondary.Broadcast();
@@ -215,37 +209,39 @@ void AWeaponInstance::StopFiringSecondary()
 
 void AWeaponInstance::FireOneShot()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Firing the weapon!"));
-
 	// Make sure weaponOwner is valid and implements IWeaponOperator
 	if (IsValid(_weaponOwner) && _weaponOwner->GetClass()->ImplementsInterface(UWeaponOperator::StaticClass()))
 	{
 		FVector targetPosition = IWeaponOperator::Execute_GetAimPoint(_weaponOwner);
 		bool isAimingDownsight = IWeaponOperator::Execute_IsAimingDownsight(_weaponOwner);
+		
+		FVector socketLocation = _skeletalMesh->GetSocketLocation("Muzzle");
+		FVector baseDir = (targetPosition - socketLocation).GetSafeNormal();
 
-		// Add weapon spread
-		const float weaponSpread = (isAimingDownsight && _weaponAsset->_aimsDownsightAsSecondaryFire) ? _weaponAsset->_weaponSpreadAimfire : _weaponAsset->_weaponSpreadHipfire;
+		float spread = (isAimingDownsight && _weaponAsset->_aimsDownsightAsSecondaryFire) ? _weaponAsset->_weaponSpreadAimfire : _weaponAsset->_weaponSpreadHipfire;
 
-		targetPosition += FVector(FMath::RandRange(-weaponSpread, weaponSpread), FMath::RandRange(-weaponSpread, weaponSpread), FMath::RandRange(-weaponSpread, weaponSpread));
+		// Apply progressive spread if needed
+		if (_weaponAsset->_weaponUsesProgressiveSpread)
+		{
+			spread *= _spreadProgressiveAccumulation;
+		}
+
+		float halfAngleRad = FMath::DegreesToRadians(spread * 0.5f);
+
+		FVector shotDir = FMath::VRandCone(baseDir, halfAngleRad);
 
 		// Physical Bullet
 		if (_weaponAsset->_shootingType == EShootingType::Bullet)
 		{
-			// Get the correct socket to spawn the projectile from
-			FVector socketLocation = _skeletalMesh->GetSocketLocation("Muzzle");
-			FRotator spawnRotation = UKismetMathLibrary::FindLookAtRotation(socketLocation, targetPosition);
-			FVector spawnLocation = socketLocation + UKismetMathLibrary::GetForwardVector(spawnRotation) * 10.0;
+			const FRotator spawnRotation = shotDir.Rotation();
+			const FVector spawnLocation = socketLocation + shotDir * 10.0f; // 10 is muzzle offset
 
 			SpawnBullet(spawnLocation, spawnRotation);
 		}
 		// RaycastBullet
 		else if (_weaponAsset->_shootingType == EShootingType::Raycast)
 		{
-			const FVector muzzleLoc = _skeletalMesh->GetSocketLocation("Muzzle");
-			
-			const FVector shotDir = (targetPosition - muzzleLoc).GetSafeNormal();
-
-			const FVector start = muzzleLoc + shotDir * 10.0f; // 10 is muzzle offset
+			const FVector start = socketLocation + shotDir * 10.0f;
 			const FVector end = start + shotDir * _weaponAsset->_range;
 
 			RaycastBullet(start, end);
@@ -255,6 +251,8 @@ void AWeaponInstance::FireOneShot()
 		_muzzleFX->Activate(true);
 		_audioComponent->Play();
 		_onWeaponFiresPrimary.Broadcast();
+
+		_spreadProgressiveAccumulation = FMath::Clamp(_spreadProgressiveAccumulation + _weaponAsset->_weaponProgressiveSpreadIncreaseRate, 0.0f, 1.0f);
 
 		// If this weapon is semi, release the trigger after we shot
 		if(_weaponAsset->_fireMode == EFireMode::Single)
@@ -318,8 +316,6 @@ void AWeaponInstance::RaycastBullet(FVector start, FVector end)
 	// Check if we're still attached to the wall (if the player looks away, this will fail, so the 'else' will correctly deatach him from the wall)
 	if (GetWorld()->LineTraceSingleByChannel(hitRes, start, end, WeaponRaycast, collParams))
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FString::Printf(TEXT("Hit %s"), *hitRes.GetActor()->GetName()));
-
 		AActor* otherActor = hitRes.GetActor();
 		
 		UPrimitiveComponent* otherComponent = hitRes.GetComponent();

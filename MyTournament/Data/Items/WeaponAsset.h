@@ -93,6 +93,15 @@ public:
 	float _aimDownsightFOV = 50.0f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	bool _weaponUsesProgressiveSpread = false;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (EditCondition = "_weaponUsesProgressiveSpread == true", EditConditionHides))
+	float _weaponProgressiveSpreadIncreaseRate = 0.1f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (EditCondition = "_weaponUsesProgressiveSpread == true", EditConditionHides))
+	float _weaponProgressiveSpreadCooldownRate = 1.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	float _weaponSpreadHipfire = 0.0f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)

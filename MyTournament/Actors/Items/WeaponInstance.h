@@ -93,6 +93,9 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	int _burstNumShot = 0;
 
+	UPROPERTY(VisibleAnywhere)
+	float _spreadProgressiveAccumulation = 0.0f;
+
 	// Debugs the raycast shot if this weapon doesn't instantiate bullets
 	UPROPERTY(EditAnywhere)
 	bool _debugRaycastBullet = false;
