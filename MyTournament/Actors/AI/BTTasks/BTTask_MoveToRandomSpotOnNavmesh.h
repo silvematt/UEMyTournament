@@ -26,6 +26,7 @@ public:
 	APawn* _pawn;
 	UBehaviorTreeComponent* _ownerComp;
 	FAIRequestID _moveRequestID;
+	UBlackboardComponent* _blackboard;
 
 	UPROPERTY(EditAnywhere, Category = "Search")
 	float _searchRadius = 1000.0f;
@@ -36,6 +37,8 @@ public:
 // Methods
 public:
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
+
+	virtual void TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
 
 	UFUNCTION()
 	void OnMoveCompleted(FAIRequestID requestID, EPathFollowingResult::Type result);

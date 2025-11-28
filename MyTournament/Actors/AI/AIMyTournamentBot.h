@@ -4,13 +4,25 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "../Components/EntityVitalsComponent.h"
 #include "AIMyTournamentBot.generated.h"
+
+class AAIControllerMyTournamentBot;
 
 UCLASS()
 class MYTOURNAMENT_API AAIMyTournamentBot : public ACharacter
 {
 	GENERATED_BODY()
 
+// Properties
+protected:
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UEntityVitalsComponent> _entityVitals;
+
+	UPROPERTY()
+	AAIControllerMyTournamentBot* _myController;
+
+// Methods
 public:
 	// Sets default values for this character's properties
 	AAIMyTournamentBot();
@@ -26,4 +38,15 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	// Called by _entityVitals's delegate onVitalsChange
+	UFUNCTION()
+	void HandleOnVitalsChange(float newHP, float newAP);
+
+	// Called by _entityVitals's delegate onDeathDelegate
+	UFUNCTION()
+	void HandleOnDeath();
+
+	// Allows to have a BP_ function to run when HandleOnVitalsChange gets called by _entityVitals's delegate onVitalsChange
+	UFUNCTION(BlueprintImplementableEvent, Category = "Vitals")
+	void BP_OnVitalsChange(float NewHP, float NewAP);
 };

@@ -5,6 +5,7 @@
 #include "AIController.h"
 #include "GameFramework/Pawn.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
+#include "BehaviorTree/BlackboardComponent.h"
 #include "../AIControllerMyTournamentBot.h"
 #include "../AIMyTournamentBot.h"
 
@@ -12,6 +13,7 @@ UBTTask_MoveToRandomSpotOnNavmesh::UBTTask_MoveToRandomSpotOnNavmesh()
 {
 	NodeName = TEXT("Move To Random Spot On Navmesh");
 	bCreateNodeInstance = true;
+	bNotifyTick = false;
 }
 
 EBTNodeResult::Type UBTTask_MoveToRandomSpotOnNavmesh::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
@@ -20,7 +22,9 @@ EBTNodeResult::Type UBTTask_MoveToRandomSpotOnNavmesh::ExecuteTask(UBehaviorTree
 	_aiController = OwnerComp.GetAIOwner();
 	_pawn = _aiController ? _aiController->GetPawn() : nullptr;
 
-	if (!_aiController || !_pawn)
+	_blackboard = OwnerComp.GetBlackboardComponent();
+
+	if (!_aiController || !_pawn || !_blackboard)
 		return EBTNodeResult::Failed;
 
 	UNavigationSystemV1* navSys = FNavigationSystem::GetCurrent<UNavigationSystemV1>(_pawn->GetWorld());
@@ -32,6 +36,8 @@ EBTNodeResult::Type UBTTask_MoveToRandomSpotOnNavmesh::ExecuteTask(UBehaviorTree
 	FNavLocation randomLocation;
 	if (!navSys->GetRandomReachablePointInRadius(_pawn->GetActorLocation(), _searchRadius, randomLocation))
 		return EBTNodeResult::Failed;
+
+	_blackboard->SetValueAsVector(FName("TargetVector"), randomLocation.Location);
 
 	// AI MoveTo
 	FAIMoveRequest moveReq;
@@ -72,4 +78,11 @@ void UBTTask_MoveToRandomSpotOnNavmesh::OnMoveCompleted(FAIRequestID requestID, 
 		this->FinishLatentTask(*this->_ownerComp, EBTNodeResult::Succeeded);
 	else
 		this->FinishLatentTask(*this->_ownerComp, EBTNodeResult::Failed);
+}
+
+void UBTTask_MoveToRandomSpotOnNavmesh::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
+{
+	Super::TickTask(OwnerComp, NodeMemory, DeltaSeconds);
+
+	//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, TEXT("Reaching Tick"));
 }
