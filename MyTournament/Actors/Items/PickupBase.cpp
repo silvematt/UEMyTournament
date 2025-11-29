@@ -4,7 +4,9 @@
 #include "PickupBase.h"
 #include "Components/AudioComponent.h"
 #include "../../Data/Items/ItemAsset.h"
+#include "../../Data/Items/Effects/HealPickupEffect.h"
 #include "../../Actors/Components/EntityVitalsComponent.h"
+#include "../../MyTournamentGameMode.h"
 
 // Sets default values
 APickupBase::APickupBase()
@@ -35,6 +37,26 @@ void APickupBase::BeginPlay()
 	Super::BeginPlay();
 
 	Initialize();
+
+	// Register this pickup
+	if (AMyTournamentGameMode* gm = GetWorld()->GetAuthGameMode<AMyTournamentGameMode>())
+	{
+		bool bHasHealEffect = false;
+
+		for (const UPickupEffect* effect : this->_itemAsset->_effects)
+		{
+			if (effect && effect->IsA(UHealPickupEffect::StaticClass()))
+			{
+				bHasHealEffect = true;
+				break;
+			}
+		}
+
+		if (this->_itemAsset->_type == EItemType::Consumable && bHasHealEffect)
+		{
+			gm->RegisterHealthPickup(this);
+		}
+	}
 }
 
 void APickupBase::Initialize()
@@ -67,6 +89,8 @@ void APickupBase::Initialize()
 	_startMeshLocation = _mesh->GetComponentLocation();
 
 	_audioComponent->SetSound(_pickupSound);
+
+	_isCurrentlyActive = true;
 }
 
 // Called every frame
@@ -92,8 +116,8 @@ void APickupBase::Tick(float DeltaTime)
 void APickupBase::OnMeshBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	// Check if it was the player
-	AMyTournamentCharacter* myChar = Cast<AMyTournamentCharacter>(OtherActor);
-	if (myChar)
+	UEntityVitalsComponent* vitals = OtherActor->FindComponentByClass<UEntityVitalsComponent>();
+	if (vitals)
 	{
 		// Checks for Pickup conditions (max health, max armor, etc.)
 		if (!CanBeTakenBy(OtherActor))
@@ -107,6 +131,7 @@ void APickupBase::OnMeshBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor
 		_mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		_mesh->SetGenerateOverlapEvents(false);
 		_mesh->SetVisibility(false);
+		_isCurrentlyActive = false;
 
 		// Call for respawn
 		if (_doesRespawn)
@@ -138,10 +163,39 @@ void APickupBase::RespawnPickup()
 	_mesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	_mesh->SetGenerateOverlapEvents(true);
 	_mesh->SetVisibility(true);
+	_isCurrentlyActive = true;
 
 	// Set glowMesh material
 	if (_glowMesh)
 		_glowMesh->SetMaterial(0, _glowMeshMaterialAvailable);
+}
+
+bool APickupBase::CanBeTakenBy(AActor* actor)
+{
+	if (_itemAsset->_pickupConditionsMask == 0)
+	{
+		return true;
+	}
+
+	// Check for vitals component, if it's there, check the conditions
+	if (UEntityVitalsComponent* vitals = actor->FindComponentByClass<UEntityVitalsComponent>())
+	{
+		if (_itemAsset->HasPickupCondition(EPickupCondition::DoNotTake_OnHealthIsMax))
+			return !IDamageable::Execute_IsAtMaxHealth(vitals);
+
+		if (_itemAsset->HasPickupCondition(EPickupCondition::DoNotTake_OnArmorIsMax))
+			return !IDamageable::Execute_IsAtMaxArmor(vitals);
+
+		if (_itemAsset->HasPickupCondition(EPickupCondition::DoNotTake_OnBothHealthAndArmorIsMax))
+			return (!IDamageable::Execute_IsAtMaxHealth(vitals) || !IDamageable::Execute_IsAtMaxArmor(vitals));
+	}
+	
+	return false;
+}
+
+bool APickupBase::IsCurrentlyActive()
+{
+	return _isCurrentlyActive;
 }
 
 void APickupBase::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
@@ -166,27 +220,4 @@ void APickupBase::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedE
 			_mesh->SetVisibility(true);
 		}
 	}
-}
-
-bool APickupBase::CanBeTakenBy(AActor* actor)
-{
-	if (_itemAsset->_pickupConditionsMask == 0)
-	{
-		return true;
-	}
-
-	// Check for vitals component, if it's there, check the conditions
-	if (UEntityVitalsComponent* vitals = actor->FindComponentByClass<UEntityVitalsComponent>())
-	{
-		if (_itemAsset->HasPickupCondition(EPickupCondition::DoNotTake_OnHealthIsMax))
-			return !IDamageable::Execute_IsAtMaxHealth(vitals);
-
-		if (_itemAsset->HasPickupCondition(EPickupCondition::DoNotTake_OnArmorIsMax))
-			return !IDamageable::Execute_IsAtMaxArmor(vitals);
-
-		if (_itemAsset->HasPickupCondition(EPickupCondition::DoNotTake_OnBothHealthAndArmorIsMax))
-			return (!IDamageable::Execute_IsAtMaxHealth(vitals) || !IDamageable::Execute_IsAtMaxArmor(vitals));
-	}
-	
-	return false;
 }

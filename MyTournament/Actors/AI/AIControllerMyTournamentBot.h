@@ -7,6 +7,7 @@
 #include "AIControllerMyTournamentBot.generated.h"
 
 class UBrainComponent;
+class UBlackboardComponent;
 
 /**
  * 
@@ -16,11 +17,9 @@ class MYTOURNAMENT_API AAIControllerMyTournamentBot : public AAIController
 {
 	GENERATED_BODY()
 
-protected:
-	UBrainComponent* _myBrain = nullptr;
-	
 public:
 	// Called by the AIBot when it dies
 	UFUNCTION()
 	void OnControlledCharacterDeath();
+
 };

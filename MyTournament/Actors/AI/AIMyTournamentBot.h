@@ -20,7 +20,7 @@ protected:
 	TObjectPtr<UEntityVitalsComponent> _entityVitals;
 
 	UPROPERTY()
-	AAIControllerMyTournamentBot* _myController;
+	TObjectPtr<AAIControllerMyTournamentBot> _myController;
 
 // Methods
 public:

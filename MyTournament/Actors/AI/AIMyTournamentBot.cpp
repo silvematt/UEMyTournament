@@ -4,6 +4,7 @@
 #include "AIMyTournamentBot.h"
 #include "AIControllerMyTournamentBot.h"
 #include "Components/CapsuleComponent.h"
+#include "BrainComponent.h"
 
 // Sets default values
 AAIMyTournamentBot::AAIMyTournamentBot()

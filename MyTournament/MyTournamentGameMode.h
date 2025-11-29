@@ -6,6 +6,8 @@
 #include "GameFramework/GameModeBase.h"
 #include "MyTournamentGameMode.generated.h"
 
+class APickupBase;
+
 /**
  * 
  */
@@ -15,6 +17,18 @@ class MYTOURNAMENT_API AMyTournamentGameMode : public AGameModeBase
 	GENERATED_BODY()
 
 // Properties
+protected:
+	UPROPERTY(VisibleAnywhere)
+	TArray<TObjectPtr<APickupBase>> _healthPickups;
+
+// Methods
 protected:	
 	virtual void StartPlay() override;
+
+public:
+	void RegisterHealthPickup(APickupBase* toRegister);
+	void UnregisterHealthPickup(APickupBase* toRemove);
+
+	UFUNCTION(BlueprintCallable)
+	APickupBase* GetBestHealthPickup(const FVector& fromLoc) const;
 };

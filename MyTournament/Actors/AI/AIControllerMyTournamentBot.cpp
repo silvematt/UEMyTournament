@@ -6,8 +6,5 @@
 
 void AAIControllerMyTournamentBot::OnControlledCharacterDeath()
 {
-	if (!_myBrain)
-		_myBrain = GetBrainComponent();
-
-	_myBrain->StopLogic(TEXT("Character Died."));
+	GetBrainComponent()->StopLogic(TEXT("Character Died."));
 }

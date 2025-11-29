@@ -35,6 +35,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Pickup | Base")
 	bool _doesRespawn = true;
 
+	UPROPERTY(EditAnywhere, Category = "Pickup | Base")
+	bool _isCurrentlyActive = false;
+
 	FTimerHandle _respawnTimeHandle;
 
 	UPROPERTY(EditAnywhere, Category = "Pickup | Base")
@@ -96,6 +99,9 @@ public:
 
 	UFUNCTION()
 	bool CanBeTakenBy(AActor* actor);
+
+	UFUNCTION()
+	bool IsCurrentlyActive();
 
 #if WITH_EDITOR
 	// Runs whenever a property on this object is changed in the editor
