@@ -55,13 +55,13 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> _fireSecondaryAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "	Input")
+	TObjectPtr<UInputAction> _dashAction;
+
 	UPROPERTY(VisibleAnywhere, Category = "Input")
 	FVector2D _movementVector;
 
 	// Dash
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "	Dash | Input")
-	TObjectPtr<UInputAction> _dashAction;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dash | Behavior")
 	float _dashInputThreshold = 0.25f; // _movementVector.Length() has to be >= than _dashInputThreshold for the dash to be able to happen
 
@@ -91,9 +91,6 @@ protected:
 	// - Camera
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	TObjectPtr<UCameraComponent> _cameraComponent;
-
-	UPROPERTY(EditAnywhere, Category = Camera)
-	FVector _camerPositionOffset = FVector(2.8f, 5.9f, 0.0f);
 
 	UPROPERTY(EditAnywhere, Category = Camera)
 	float _cameraFOV = 90.0f;
@@ -163,6 +160,9 @@ protected:
 													// 2: if the "stick-check" has the vector length too small, if we're sliding along a rounded surface it may fail
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WallRun | Settings")
+	float _wallRunForwardObstacleCheckLength = 50.0f; // While wallruning, we check if there's an object in front of us that would be an obstacle to our wallrun. If so, the wallrun will be stopped.
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WallRun | Settings")
 	float _wallRunCameraTiltValue = 10.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WallRun | Settings")
@@ -174,10 +174,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WallRun | Behavior")
 	float _wallRunSpeed = 1000.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WallRun | Settings")
-	float _wallRunForwardObstacleCheckLength = 50.0f;
-	
 
 	// - State
 	UPROPERTY(VisibleAnywhere, Category = "WallRun | State")
@@ -286,10 +282,10 @@ public:
 	void CustomCrouchToggle();
 
 	UFUNCTION()
-	void OnWeaponIsEquipped(const FWeaponInInventoryEntry& weaponEntry);
+	void HandleOnWeaponEquipped(const FWeaponInInventoryEntry& weaponEntry);
 
 	UFUNCTION()
-	void OnWeaponIsUnequipped(const FWeaponInInventoryEntry& weaponEntry);
+	void HandleOnWeaponUnequipped(const FWeaponInInventoryEntry& weaponEntry);
 
 	// IWeaponOperator
 	UFUNCTION()
@@ -299,12 +295,10 @@ public:
 	bool IsAimingDownsight_Implementation() override;
 
 	UFUNCTION()
-	void OnWeaponFiresPrimary();
+	void HandleOnWeaponFirePrimary();
 
 	UFUNCTION()
-	void OnWeaponFiresSecondary();
-
-	void OnWeaponFiresSecondaryEnds();
+	void HandleOnWeaponFireSecondary();
 
 	UFUNCTION()
 	void AimDownsight();
@@ -316,10 +310,10 @@ public:
 	void BP_OnWeaponFiresPrimary();
 
 	// Blueprint
-	UFUNCTION(BlueprintCallable, BlueprintPure)
+	UFUNCTION(BlueprintPure)
 	bool BPF_IsWallRunning();
 
-	UFUNCTION(BlueprintCallable, BlueprintPure)
+	UFUNCTION(BlueprintPure)
 	bool BPF_IsWallRunningRight();
 
 	UFUNCTION(BlueprintCallable)

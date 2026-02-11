@@ -55,7 +55,7 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UInputMappingContext> _weaponMappingContext; // this is set to the player when the weapon is equipped
 
-	// Data, anim blueprints to play when this weapon is used
+	// Anim blueprints to use on the TP model (player/ai) when this weapon is used
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UAnimBlueprint> _fpsAnimBlueprint;
 
@@ -79,11 +79,11 @@ public:
 	bool _bIsTriggerHeld = false;
 
 	UPROPERTY(VisibleAnywhere)
-	bool b_IsSecondTriggerHeld = false;
+	bool _bIsSecondTriggerHeld = false;
 
 	// Allows to shoot at the set fire rate
 	UPROPERTY(VisibleAnywhere)
-	float _fireTimer = 0.0f;;
+	float _fireTimer = 0.0f;
 
 	// Burst fire mode management
 	UPROPERTY(VisibleAnywhere)
@@ -102,8 +102,8 @@ public:
 
 public:
 	// Delegates
-	FOnWeaponFiresSignature _onWeaponFiresPrimary;
-	FOnWeaponFiresSecondarySignature _onWeaponFiresSecondary;
+	FOnWeaponFiresSignature _onWeaponFiresPrimaryDelegate;
+	FOnWeaponFiresSecondarySignature _onWeaponFiresSecondaryDelegate;
 
 
 protected:

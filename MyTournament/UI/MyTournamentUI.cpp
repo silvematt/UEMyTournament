@@ -30,15 +30,15 @@ void UMyTournamentUI::CustomInitialize()
 	// Dashes
 	if (myCharacter)
 	{
-		myCharacter->_onDashIsUsedDelegate.AddUniqueDynamic(this, &UMyTournamentUI::HandleDashChange);
-		myCharacter->_onDashIsRefilledDelegate.AddUniqueDynamic(this, &UMyTournamentUI::HandleDashChange);
+		myCharacter->_onDashIsUsedDelegate.AddUniqueDynamic(this, &UMyTournamentUI::HandleOnDashChange);
+		myCharacter->_onDashIsRefilledDelegate.AddUniqueDynamic(this, &UMyTournamentUI::HandleOnDashChange);
 
 		_playerVitals = myCharacter->GetVitalsComponent();
 		_playerInventory = myCharacter->GetInventoryComponent();
 
 		if (_playerVitals)
 		{
-			_playerVitals->_onVitalsChange.AddUniqueDynamic(this, &UMyTournamentUI::HandleOnVitalsChange);
+			_playerVitals->_onVitalsChangeDelegate.AddUniqueDynamic(this, &UMyTournamentUI::HandleOnVitalsChange);
 
 			// Do one update
 			HandleOnVitalsChange(_playerVitals->GetCurrentHealth(), _playerVitals->GetCurrentArmor());
@@ -46,15 +46,15 @@ void UMyTournamentUI::CustomInitialize()
 
 		if (_playerInventory)
 		{
-			_playerInventory->_onWeaponIsEquippedDelegate.AddDynamic(this, &UMyTournamentUI::HandleOnWeaponIsEquipped);
-			_playerInventory->_onAmmoIsAddedDelegate.AddDynamic(this, &UMyTournamentUI::HandleOnAmmoIsAdded);
-			_playerInventory->_onAmmoIsConsumedDelegate.AddDynamic(this, &UMyTournamentUI::HandleOnAmmoIsConsumed);
+			_playerInventory->_onWeaponIsEquippedDelegate.AddUniqueDynamic(this, &UMyTournamentUI::HandleOnWeaponIsEquipped);
+			_playerInventory->_onAmmoIsAddedDelegate.AddUniqueDynamic(this, &UMyTournamentUI::HandleOnAmmoIsAdded);
+			_playerInventory->_onAmmoIsConsumedDelegate.AddUniqueDynamic(this, &UMyTournamentUI::HandleOnAmmoIsConsumed);
 		}
 	}
 
 }
 
-void UMyTournamentUI::HandleDashChange(int curDashAvailable)
+void UMyTournamentUI::HandleOnDashChange(int curDashAvailable)
 {
 	switch (curDashAvailable)
 	{

@@ -21,7 +21,6 @@ UInventoryComponent::UInventoryComponent()
 void UInventoryComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
 }
 
 void UInventoryComponent::BindWeaponSwitchActions()
@@ -31,7 +30,7 @@ void UInventoryComponent::BindWeaponSwitchActions()
 	{
 		if (UEnhancedInputComponent* enhancedInputComponent = Cast<UEnhancedInputComponent>(pc->InputComponent))
 		{
-			// Fire
+			// Switch weapons
 			enhancedInputComponent->BindAction(_IAWeaponSlotOne, ETriggerEvent::Started, this, &UInventoryComponent::SwitchWeaponInputAction, EWeaponSlot::Slot1);
 			enhancedInputComponent->BindAction(_IAWeaponSlotTwo, ETriggerEvent::Started, this, &UInventoryComponent::SwitchWeaponInputAction, EWeaponSlot::Slot2);
 			enhancedInputComponent->BindAction(_IAWeaponSlotThree, ETriggerEvent::Started, this, &UInventoryComponent::SwitchWeaponInputAction, EWeaponSlot::Slot3);
@@ -40,7 +39,7 @@ void UInventoryComponent::BindWeaponSwitchActions()
 	}
 }
 
-// CustomInitialize is called by the owner of this component (like the player)
+// CustomInitialize is called by the owner of this component (like the player) to enforce a deterministic initialization of Player and subcomponents
 void UInventoryComponent::CustomInitialize(AActor* invOwner)
 {
 	_inventoryOwner = invOwner;
@@ -73,14 +72,13 @@ bool UInventoryComponent::TryAddWeapon(UWeaponAsset* weaponToAdd, uint32 ammoCou
 	TryAddAmmo(weaponToAdd->_ammoType, ammoCount);
 
 	// If no weapon was equipped, equip this one
-	if (_currentWeaponSlot == EWeaponSlot::Slot0)
+	if (_currentWeaponSlot == EWeaponSlot::None)
 		TryEquip(weaponToAdd->_weaponSlot);
 	// Otherwise if the currently equipped weapon has no ammo (and it's a different weapon), equip this new one
 	else if (_currentWeaponSlot != weaponToAdd->_weaponSlot && GetCurrentWeaponAmmoCount() == 0)
 		TryEquip(weaponToAdd->_weaponSlot);
 
 	_onWeaponIsAddedDelegate.Broadcast(weaponToAdd);
-
 	return true;
 }
 
@@ -106,7 +104,7 @@ bool UInventoryComponent::TryAddAmmo(UAmmoType* ammoToAdd, uint32 ammoCount)
 
 bool UInventoryComponent::TryEquip(EWeaponSlot slot)
 {
-	if (_currentWeaponSlot != EWeaponSlot::Slot0)
+	if (_currentWeaponSlot != EWeaponSlot::None)
 		UnequipCurrentWeapon();
 
 	// Spawn WeaponInstance (may want to cache them for weapon switch)
@@ -124,9 +122,9 @@ bool UInventoryComponent::TryEquip(EWeaponSlot slot)
 	return true;
 }
 
-int32 UInventoryComponent::GetCurrentWeaponAmmoCount() const
+uint32 UInventoryComponent::GetCurrentWeaponAmmoCount() const
 {
-	if (_currentWeaponSlot == EWeaponSlot::Slot0)
+	if (_currentWeaponSlot == EWeaponSlot::None) // means if no weapon is equipped
 		return 0;
 
 	// Check for invalid case
@@ -134,20 +132,15 @@ int32 UInventoryComponent::GetCurrentWeaponAmmoCount() const
 	if (!entry)
 		return 0;
 
-	const UAmmoType* ammoType = entry->_asset->_ammoType;
-	const int32 ammoCount = _ammo.FindRef(ammoType); // returns 0 if not found
-	return ammoCount;
+	return GetAmmoCount(entry->_asset->_ammoType);
 }
 
-uint32 UInventoryComponent::GetAmmoCount(UAmmoType* ammo) 
+uint32 UInventoryComponent::GetAmmoCount(UAmmoType* ammo) const
 {
-	if (_currentWeaponSlot == EWeaponSlot::Slot0)
+	if (_currentWeaponSlot == EWeaponSlot::None) // means if no weapon is equipped
 		return 0;
 
-	if (!_ammo.Contains(ammo))
-		return 0;
-
-	return _ammo[ammo];
+	return _ammo.FindRef(ammo);
 }
 
 void UInventoryComponent::SwitchWeaponInputAction(const FInputActionValue& Value, const EWeaponSlot slot)
@@ -157,7 +150,7 @@ void UInventoryComponent::SwitchWeaponInputAction(const FInputActionValue& Value
 
 void UInventoryComponent::ConsumeAmmo(UAmmoType* ammo, uint32 val)
 {
-	if (_currentWeaponSlot == EWeaponSlot::Slot0)
+	if (_currentWeaponSlot == EWeaponSlot::None)
 		return;
 
 	if (!_ammo.Contains(ammo))
@@ -172,7 +165,7 @@ bool UInventoryComponent::UnequipCurrentWeapon()
 {
 	_onWeaponIsUnequippedDelegate.Broadcast(_weapons[_currentWeaponSlot]);
 
-	_currentWeaponSlot = EWeaponSlot::Slot0;
+	_currentWeaponSlot = EWeaponSlot::None;
 	return true;
 }
 
@@ -181,7 +174,7 @@ bool UInventoryComponent::SwitchWeapon(EWeaponSlot slot)
 	// Check if a weapon in the asked slot is present in the inventory map
 	if (slot != _currentWeaponSlot && _weapons.Contains(slot))
 	{
-		if (_currentWeaponSlot != EWeaponSlot::Slot0)
+		if (_currentWeaponSlot != EWeaponSlot::None)
 			UnequipCurrentWeapon();
 
 		return TryEquip(slot);
@@ -192,20 +185,16 @@ bool UInventoryComponent::SwitchWeapon(EWeaponSlot slot)
 
 UWeaponAsset* UInventoryComponent::GetCurrentWeaponAsset()
 {
-	if (_currentWeaponSlot != EWeaponSlot::Slot0)
-	{
+	if (_currentWeaponSlot != EWeaponSlot::None)
 		return(_weapons[_currentWeaponSlot]._asset);
-	}
 
 	return nullptr;
 }
 
-AWeaponInstance* UInventoryComponent::GetCurrentWeapon()
+AWeaponInstance* UInventoryComponent::GetCurrentWeaponInstance()
 {
-	if (_currentWeaponSlot != EWeaponSlot::Slot0)
-	{
+	if (_currentWeaponSlot != EWeaponSlot::None)
 		return(_weapons[_currentWeaponSlot]._instance);
-	}
 
 	return nullptr;
 }

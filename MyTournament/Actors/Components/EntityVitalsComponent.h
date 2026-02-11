@@ -8,7 +8,7 @@
 #include "EntityVitalsComponent.generated.h"
 
 // Delegates
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDamageIsAppliedSignature, float, newHealth, float, newArmor);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnVitalsChangeSignature, float, newHealth, float, newArmor);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeathSignature);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -38,7 +38,7 @@ private:
 	float _maxArmor = 0.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Locational Damage")
-	TMap<FName, float> _locationalDamageMap;
+	TMap<FName, float> _locationalDamageMap; // bone name -> dmg Multiplier
 
 protected:
 	// Called when the game starts
@@ -46,7 +46,7 @@ protected:
 
 public:
 	UPROPERTY(BlueprintAssignable)
-	FOnDamageIsAppliedSignature _onVitalsChange;
+	FOnVitalsChangeSignature _onVitalsChangeDelegate;
 
 	UPROPERTY(BlueprintAssignable)
 	FOnDeathSignature _onDeathDelegate;
@@ -58,16 +58,16 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	UFUNCTION(BlueprintCallable, BlueprintPure)
+	UFUNCTION(BlueprintPure)
 	float GetCurrentHealth() { return _currentHealth; }
 
-	UFUNCTION(BlueprintCallable, BlueprintPure)
+	UFUNCTION(BlueprintPure)
 	float GetCurrentArmor() { return _currentArmor; }
 
-	UFUNCTION(BlueprintCallable, BlueprintPure)
+	UFUNCTION(BlueprintPure)
 	float GetMaxHealth() { return _maxHealth; }
 
-	UFUNCTION(BlueprintCallable, BlueprintPure)
+	UFUNCTION(BlueprintPure)
 	float GetMaxAmor() { return _maxArmor; }
 
 	// Should be called by ApplyDamage_Implementation after health reaches 0

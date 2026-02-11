@@ -62,7 +62,7 @@ protected:
 	void NativeConstruct() override;
 
 	UFUNCTION()
-	void HandleDashChange(int curDashAvailable);
+	void HandleOnDashChange(int curDashAvailable);
 
 	UFUNCTION()
 	void HandleOnVitalsChange(float newHP, float newArmor);

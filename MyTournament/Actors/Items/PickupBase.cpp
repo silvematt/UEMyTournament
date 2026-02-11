@@ -80,7 +80,7 @@ void APickupBase::Initialize()
 	// Mesh's collider will determine overlaps
 	_mesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	_mesh->SetGenerateOverlapEvents(true);
-	_mesh->OnComponentBeginOverlap.AddDynamic(this, &APickupBase::OnMeshBeginOverlap);
+	_mesh->OnComponentBeginOverlap.AddUniqueDynamic(this, &APickupBase::OnMeshBeginOverlap);
 
 	// Set glowMesh default material
 	if(_glowMesh)

@@ -30,7 +30,7 @@ void ATargetMannequin::BeginPlay()
 	Super::BeginPlay();
 	
 	_entityVitals->CustomInitialize();
-	_entityVitals->_onVitalsChange.AddUniqueDynamic(this, &ATargetMannequin::HandleOnVitalsChange);
+	_entityVitals->_onVitalsChangeDelegate.AddUniqueDynamic(this, &ATargetMannequin::HandleOnVitalsChange);
 	_entityVitals->_onDeathDelegate.AddUniqueDynamic(this, &ATargetMannequin::HandleOnDeath);
 
 	_skeletalMesh->SetAnimInstanceClass(_defaultAnimBlueprint->GeneratedClass);

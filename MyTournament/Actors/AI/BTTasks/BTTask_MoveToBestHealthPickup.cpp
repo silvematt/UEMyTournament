@@ -50,7 +50,7 @@ EBTNodeResult::Type UBTTask_MoveToBestHealthPickup::ExecuteTask(UBehaviorTreeCom
 	}
 
 	// Latent task
-	_aiController->ReceiveMoveCompleted.AddDynamic(this, &UBTTask_MoveToBestHealthPickup::OnMoveCompleted);
+	_aiController->ReceiveMoveCompleted.AddUniqueDynamic(this, &UBTTask_MoveToBestHealthPickup::OnMoveCompleted);
 	isCurrentlyInAMove = true;
 
 	return EBTNodeResult::InProgress;
@@ -124,7 +124,7 @@ void UBTTask_MoveToBestHealthPickup::TickTask(UBehaviorTreeComponent& OwnerComp,
 		}
 
 		// Latent task
-		_aiController->ReceiveMoveCompleted.AddDynamic(this, &UBTTask_MoveToBestHealthPickup::OnMoveCompleted);
+		_aiController->ReceiveMoveCompleted.AddUniqueDynamic(this, &UBTTask_MoveToBestHealthPickup::OnMoveCompleted);
 		isCurrentlyInAMove = true;
 	}
 }

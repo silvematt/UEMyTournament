@@ -27,7 +27,7 @@ void AAIMyTournamentBot::BeginPlay()
 		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("AAIMyTournamentBot: _myController is null!"));
 
 	_entityVitals->CustomInitialize();
-	_entityVitals->_onVitalsChange.AddUniqueDynamic(this, &AAIMyTournamentBot::HandleOnVitalsChange);
+	_entityVitals->_onVitalsChangeDelegate.AddUniqueDynamic(this, &AAIMyTournamentBot::HandleOnVitalsChange);
 	_entityVitals->_onDeathDelegate.AddUniqueDynamic(this, &AAIMyTournamentBot::HandleOnDeath);
 }
 

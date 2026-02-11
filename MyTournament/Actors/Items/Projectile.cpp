@@ -32,7 +32,7 @@ AProjectile::AProjectile()
 	// Callback on projectile hits something
 	_collisionComponent->SetGenerateOverlapEvents(true);
 	//_collisionComponent->OnComponentBeginOverlap.AddDynamic(this, &AProjectile::OnOverlap);
-	_collisionComponent->OnComponentHit.AddDynamic(this, &AProjectile::OnHit);
+	_collisionComponent->OnComponentHit.AddUniqueDynamic(this, &AProjectile::OnHit);
 
 	// Set hierarchy
 	RootComponent = _collisionComponent;
@@ -78,7 +78,7 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 	if (!_shot)
 		return;
 
-	// Only add impulse and destroy projectile if we hit a physics
+	// Only add impulse and destroy projectile if we hit a physics object
 	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherActor != _actorThatShot) && (OtherComp != nullptr))
 	{
 		if (_isAnExplosiveBullet)

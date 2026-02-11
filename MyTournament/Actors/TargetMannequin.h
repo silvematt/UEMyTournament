@@ -17,7 +17,6 @@ public:
 	// Sets default values for this actor's properties
 	ATargetMannequin();
 
-
 // Properties
 protected:
 

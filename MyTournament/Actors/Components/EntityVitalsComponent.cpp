@@ -30,7 +30,7 @@ void UEntityVitalsComponent::CustomInitialize()
 
 	_isAlive = true;
 
-	_onVitalsChange.Broadcast(_currentHealth, _currentArmor);
+	_onVitalsChangeDelegate.Broadcast(_currentHealth, _currentArmor);
 }
 
 // Called every frame
@@ -60,7 +60,7 @@ void UEntityVitalsComponent::ApplyDamage_Implementation(float dmgAmount)
 	_currentHealth = FMath::Clamp(_currentHealth - (healthLoss), 0.0f, _maxHealth);
 	_currentArmor = FMath::Clamp(_currentArmor - (dmgAmount), 0.0f, _maxArmor);
 
-	_onVitalsChange.Broadcast(_currentHealth, _currentArmor);
+	_onVitalsChangeDelegate.Broadcast(_currentHealth, _currentArmor);
 
 	if (_currentHealth <= 0.0f)
 		Death();
@@ -70,14 +70,14 @@ void UEntityVitalsComponent::AddHealth_Implementation(float hpAmount)
 {
 	_currentHealth = FMath::Clamp(_currentHealth + hpAmount, 0.0f, _maxHealth);
 
-	_onVitalsChange.Broadcast(_currentHealth, _currentArmor);
+	_onVitalsChangeDelegate.Broadcast(_currentHealth, _currentArmor);
 }
 
 void UEntityVitalsComponent::AddArmor_Implementation(float armorAmount)
 {
 	_currentArmor = FMath::Clamp(_currentArmor + armorAmount, 0.0f, _maxArmor);
 
-	_onVitalsChange.Broadcast(_currentHealth, _currentArmor);
+	_onVitalsChangeDelegate.Broadcast(_currentHealth, _currentArmor);
 }
 
 bool UEntityVitalsComponent::IsAlive_Implementation() const

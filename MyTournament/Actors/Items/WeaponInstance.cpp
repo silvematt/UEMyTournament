@@ -37,7 +37,7 @@ AWeaponInstance::AWeaponInstance()
 	_additionalSkeletalMesh->SetVisibility(false);
 }
 
-// Player-Only, binds the IA to AWeaponInstance functions
+// Player-Only, binds the IA to AWeaponInstance fire primary function
 void AWeaponInstance::BindFirePrimaryAction(const UInputAction* InputToBind)
 {
 	// Set up action bindings
@@ -55,6 +55,7 @@ void AWeaponInstance::BindFirePrimaryAction(const UInputAction* InputToBind)
 	}
 }
 
+// Player-Only, binds the IA to AWeaponInstance fire secondary function
 void AWeaponInstance::BindFireSecondaryAction(const UInputAction* InputToBind)
 {
 	// Set up action bindings
@@ -197,14 +198,14 @@ void AWeaponInstance::FireSecondary()
 	if (!_isWeaponActivated)
 		return;
 
-	b_IsSecondTriggerHeld = true;
+	_bIsSecondTriggerHeld = true;
 
-	_onWeaponFiresSecondary.Broadcast();
+	_onWeaponFiresSecondaryDelegate.Broadcast();
 }
 
 void AWeaponInstance::StopFiringSecondary()
 {
-	b_IsSecondTriggerHeld = false;
+	_bIsSecondTriggerHeld = false;
 }
 
 void AWeaponInstance::FireOneShot()
@@ -250,7 +251,7 @@ void AWeaponInstance::FireOneShot()
 		_ownersInventory->ConsumeAmmo(_weaponAsset->_ammoType, 1);
 		_muzzleFX->Activate(true);
 		_audioComponent->Play();
-		_onWeaponFiresPrimary.Broadcast();
+		_onWeaponFiresPrimaryDelegate.Broadcast();
 
 		_spreadProgressiveAccumulation = FMath::Clamp(_spreadProgressiveAccumulation + _weaponAsset->_weaponProgressiveSpreadIncreaseRate, 0.0f, 1.0f);
 

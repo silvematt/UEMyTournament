@@ -62,7 +62,7 @@ void AMyTournamentCharacter::BeginPlay()
 	
 	if (playerController)
 	{
-		if (UEnhancedInputLocalPlayerSubsystem* inputSubsystem = ULocalPlayer::GetSubsystem< UEnhancedInputLocalPlayerSubsystem>(playerController->GetLocalPlayer()))
+		if (UEnhancedInputLocalPlayerSubsystem* inputSubsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(playerController->GetLocalPlayer()))
 		{
 			inputSubsystem->AddMappingContext(_baseInputMappingContext, 0);
 		}
@@ -85,8 +85,8 @@ void AMyTournamentCharacter::BeginPlay()
 	_myTournamentUI->SetOwningPlayer(playerController);
 
 	// Set weapon callback
-	_inventoryComponent->_onWeaponIsEquippedDelegate.AddUniqueDynamic(this, &AMyTournamentCharacter::OnWeaponIsEquipped);
-	_inventoryComponent->_onWeaponIsUnequippedDelegate.AddUniqueDynamic(this, &AMyTournamentCharacter::OnWeaponIsUnequipped);
+	_inventoryComponent->_onWeaponIsEquippedDelegate.AddUniqueDynamic(this, &AMyTournamentCharacter::HandleOnWeaponEquipped);
+	_inventoryComponent->_onWeaponIsUnequippedDelegate.AddUniqueDynamic(this, &AMyTournamentCharacter::HandleOnWeaponUnequipped);
 
 	// Custom Initialize components
 	// Begin Play order can vary, so we initialize sub-components here. This ensures deterministic initialization 
@@ -96,6 +96,25 @@ void AMyTournamentCharacter::BeginPlay()
 	_inventoryComponent->BindWeaponSwitchActions();
 
 	GEngine->AddOnScreenDebugMessage(-1, 2.5f, FColor::Yellow, TEXT("MyTournamentCharacter initialized!"));
+}
+
+// Called to bind functionality to input
+void AMyTournamentCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	if (UEnhancedInputComponent* enhancedInput = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
+	{
+		enhancedInput->BindAction(_moveAction, ETriggerEvent::Triggered, this, &AMyTournamentCharacter::Move);
+		enhancedInput->BindAction(_moveAction, ETriggerEvent::Completed, this, &AMyTournamentCharacter::StopMoving);
+
+		enhancedInput->BindAction(_jumpAction, ETriggerEvent::Started, this, &AMyTournamentCharacter::CustomJump);
+		enhancedInput->BindAction(_jumpAction, ETriggerEvent::Completed, this, &AMyTournamentCharacter::StopJumping);
+
+		enhancedInput->BindAction(_lookAction, ETriggerEvent::Triggered, this, &AMyTournamentCharacter::Look);
+
+		enhancedInput->BindAction(_dashAction, ETriggerEvent::Started, this, &AMyTournamentCharacter::Dash);
+
+		enhancedInput->BindAction(_crouchAction, ETriggerEvent::Started, this, &AMyTournamentCharacter::CustomCrouchToggle);
+	}
 }
 
 // Called every frame
@@ -120,25 +139,6 @@ void AMyTournamentCharacter::Tick(float DeltaTime)
 
 	// Rotates the camera holder if wallrunning
 	UpdateCameraTilt(DeltaTime);
-}
-
-// Called to bind functionality to input
-void AMyTournamentCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	if (UEnhancedInputComponent* enhancedInput = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
-	{
-		enhancedInput->BindAction(_moveAction, ETriggerEvent::Triggered, this, &AMyTournamentCharacter::Move);
-		enhancedInput->BindAction(_moveAction, ETriggerEvent::Completed, this, &AMyTournamentCharacter::StopMoving);
-
-		enhancedInput->BindAction(_jumpAction, ETriggerEvent::Started, this, &AMyTournamentCharacter::CustomJump);
-		enhancedInput->BindAction(_jumpAction, ETriggerEvent::Completed, this, &AMyTournamentCharacter::StopJumping);
-
-		enhancedInput->BindAction(_lookAction, ETriggerEvent::Triggered, this, &AMyTournamentCharacter::Look);
-
-		enhancedInput->BindAction(_dashAction, ETriggerEvent::Started, this, &AMyTournamentCharacter::Dash);
-
-		enhancedInput->BindAction(_crouchAction, ETriggerEvent::Started, this, &AMyTournamentCharacter::CustomCrouchToggle);
-	}
 }
 
 void AMyTournamentCharacter::Move(const FInputActionValue& inputValue)
@@ -195,6 +195,7 @@ void AMyTournamentCharacter::Landed(const FHitResult& hit)
 {
 	Super::Landed(hit);
 
+	// Reset last wall run pointer, so that we can wallrun again
 	_wallRunLastWall = nullptr;
 }
 
@@ -205,7 +206,7 @@ void AMyTournamentCharacter::Dash()
 		UnCrouch();
 	else
 	{
-		// If there's one dash available to the player and he's moving over the _dashInputThreshold
+		// If there's at least one dash available to the player and he's moving over the _dashInputThreshold
 		if (_dashCurAvaiable >= 1 && _movementVector.Length() >= _dashInputThreshold)
 		{
 			// We can perform a dash
@@ -297,7 +298,7 @@ void AMyTournamentCharacter::DetectRunnableWalls()
 			AActor* hitActor = hitRes.GetActor();
 
 			// Check if it's the right tag
-			if (hitActor->ActorHasTag("WallRunnable") && (_wallRunLastWall == nullptr || (_wallRunLastWall != nullptr && _wallRunLastWall != hitActor))) // check if this wall is different from last wall, since we give the player one jump when he wallruns he could wallrun infinitely without this
+			if (hitActor->ActorHasTag("WallRunnable") && (_wallRunLastWall == nullptr || (_wallRunLastWall != nullptr && _wallRunLastWall != hitActor))) // check if this wall is different from last wall, since we give the player one jump when he wallruns he could wallrun infinitely on the same wall without the second check
 			{
 				if (_wallRunDebugEnabled)
 					GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("Right wall run!"));
@@ -485,16 +486,16 @@ void AMyTournamentCharacter::UpdateCameraTilt(float deltaTime)
 		float NewRoll = FMath::FInterpTo(CurrentRotation.Pitch, 0.0f, deltaTime, _wallRunCameraTiltInterpSpeed);
 		CurrentRotation.Pitch = NewRoll;
 		_cameraHolder->SetRelativeRotation(CurrentRotation);
-		return;
 	}
+	else // Wallrunning - tilt left or right
+	{
+		float TargetRoll = _wallRunIsWallRunningRight ? -_wallRunCameraTiltValue : _wallRunCameraTiltValue;
 
-	// Wallrunning - tilt left or right
-	float TargetRoll = _wallRunIsWallRunningRight ? -_wallRunCameraTiltValue : _wallRunCameraTiltValue;
-
-	FRotator currentRotation = _cameraHolder->GetRelativeRotation();
-	float newRoll = FMath::FInterpTo(currentRotation.Pitch, TargetRoll, deltaTime, _wallRunCameraTiltInterpSpeed);
-	currentRotation.Pitch = newRoll;
-	_cameraHolder->SetRelativeRotation(currentRotation);
+		FRotator currentRotation = _cameraHolder->GetRelativeRotation();
+		float newRoll = FMath::FInterpTo(currentRotation.Pitch, TargetRoll, deltaTime, _wallRunCameraTiltInterpSpeed);
+		currentRotation.Pitch = newRoll;
+		_cameraHolder->SetRelativeRotation(currentRotation);
+	}
 }
 
 void AMyTournamentCharacter::CustomCrouchToggle()
@@ -509,7 +510,7 @@ void AMyTournamentCharacter::CustomCrouchToggle()
 	}
 }
 
-void AMyTournamentCharacter::OnWeaponIsEquipped(const FWeaponInInventoryEntry& weaponEntry)
+void AMyTournamentCharacter::HandleOnWeaponEquipped(const FWeaponInInventoryEntry& weaponEntry)
 {
 	// FP
 	// Attach the weapon instance to the fpsHands component
@@ -526,8 +527,8 @@ void AMyTournamentCharacter::OnWeaponIsEquipped(const FWeaponInInventoryEntry& w
 	weaponEntry._instance->_additionalSkeletalMesh->SetOnlyOwnerSee(true);
 
 	// Subscribe to delegates
-	weaponEntry._instance->_onWeaponFiresPrimary.AddDynamic(this, &AMyTournamentCharacter::OnWeaponFiresPrimary);
-	weaponEntry._instance->_onWeaponFiresSecondary.AddDynamic(this, &AMyTournamentCharacter::OnWeaponFiresSecondary);
+	weaponEntry._instance->_onWeaponFiresPrimaryDelegate.AddUniqueDynamic(this, &AMyTournamentCharacter::HandleOnWeaponFirePrimary);
+	weaponEntry._instance->_onWeaponFiresSecondaryDelegate.AddUniqueDynamic(this, &AMyTournamentCharacter::HandleOnWeaponFireSecondary);
 
 	// Update Anims
 	// Reset current _fpsAnimInstance before setting a new one
@@ -561,7 +562,7 @@ void AMyTournamentCharacter::OnWeaponIsEquipped(const FWeaponInInventoryEntry& w
 	weaponEntry._instance->BindFireSecondaryAction(_fireSecondaryAction);
 }
 
-void AMyTournamentCharacter::OnWeaponIsUnequipped(const FWeaponInInventoryEntry& weaponEntry)
+void AMyTournamentCharacter::HandleOnWeaponUnequipped(const FWeaponInInventoryEntry& weaponEntry)
 {
 	// Unbind mapping context
 	APlayerController* playerController = Cast<APlayerController>(Controller);
@@ -574,8 +575,9 @@ void AMyTournamentCharacter::OnWeaponIsUnequipped(const FWeaponInInventoryEntry&
 		}
 	}
 
-	weaponEntry._instance->_onWeaponFiresPrimary.RemoveDynamic(this, &AMyTournamentCharacter::OnWeaponFiresPrimary);
-	weaponEntry._instance->_onWeaponFiresSecondary.RemoveDynamic(this, &AMyTournamentCharacter::OnWeaponFiresSecondary);
+	// Unsubscribe from delegates we've previously (OnWeaponIsEquipped) subscribed
+	weaponEntry._instance->_onWeaponFiresPrimaryDelegate.RemoveDynamic(this, &AMyTournamentCharacter::HandleOnWeaponFirePrimary);
+	weaponEntry._instance->_onWeaponFiresSecondaryDelegate.RemoveDynamic(this, &AMyTournamentCharacter::HandleOnWeaponFireSecondary);
 	weaponEntry._instance->UnbindInputActions();
 
 	// Remove Aim downsight
@@ -584,7 +586,13 @@ void AMyTournamentCharacter::OnWeaponIsUnequipped(const FWeaponInInventoryEntry&
 		StopAimingDownsight();
 	}
 
-	_currentAimingDownsightUW = nullptr; // will be destroyed by GC
+	if (_currentAimingDownsightUW)
+	{
+		_currentAimingDownsightUW->RemoveFromParent();
+		_currentAimingDownsightUW->MarkAsGarbage();
+	}
+	
+	_currentAimingDownsightUW = nullptr; // will be destroyed by GC (TODO handle it better)
 
 	// Reset Animator
 	_fpsMesh->SetAnimInstanceClass(_fpsDefaultAnim->GeneratedClass);
@@ -616,7 +624,7 @@ FVector AMyTournamentCharacter::GetAimPoint_Implementation()
 		FCollisionQueryParams collParams(SCENE_QUERY_STAT(AimTrace), true);
 		collParams.AddIgnoredActor(this);
 
-		if(auto weap = _inventoryComponent->GetCurrentWeapon())
+		if(auto weap = _inventoryComponent->GetCurrentWeaponInstance())
 			collParams.AddIgnoredActor(weap);
 
 		World->LineTraceSingleByChannel(hitRes, traceStart, traceEnd, ECollisionChannel::ECC_Visibility, collParams);
@@ -629,7 +637,7 @@ FVector AMyTournamentCharacter::GetAimPoint_Implementation()
 }
 
 
-void AMyTournamentCharacter::OnWeaponFiresPrimary()
+void AMyTournamentCharacter::HandleOnWeaponFirePrimary()
 {
 	_fpsAnimInstance->_bIsShooting = true;
 	_characterAnimInstance->_bIsShooting = true;
@@ -637,7 +645,7 @@ void AMyTournamentCharacter::OnWeaponFiresPrimary()
 	BP_OnWeaponFiresPrimary();
 }
 
-void AMyTournamentCharacter::OnWeaponFiresSecondary()
+void AMyTournamentCharacter::HandleOnWeaponFireSecondary()
 {
 	if (auto curWeap = _inventoryComponent->GetCurrentWeaponAsset())
 	{
@@ -657,7 +665,7 @@ void AMyTournamentCharacter::OnWeaponFiresSecondary()
 
 void AMyTournamentCharacter::AimDownsight()
 {
-	if (auto curWeap = _inventoryComponent->GetCurrentWeapon())
+	if (auto curWeap = _inventoryComponent->GetCurrentWeaponInstance())
 	{
 		// Add UW from viewport and hide fps mesh
 		_currentAimingDownsightUW->AddToViewport(0);
@@ -669,7 +677,7 @@ void AMyTournamentCharacter::AimDownsight()
 
 void AMyTournamentCharacter::StopAimingDownsight()
 {
-	if (auto curWeap = _inventoryComponent->GetCurrentWeapon())
+	if (auto curWeap = _inventoryComponent->GetCurrentWeaponInstance())
 	{
 		// Remove UW from viewport and show fps mesh
 		_currentAimingDownsightUW->RemoveFromViewport();
@@ -697,7 +705,7 @@ bool AMyTournamentCharacter::BPF_IsWallRunningRight()
 
 bool AMyTournamentCharacter::BPF_ActivateCurrentWeapon()
 {
-	if (auto weap = _inventoryComponent->GetCurrentWeapon())
+	if (auto weap = _inventoryComponent->GetCurrentWeaponInstance())
 	{
 		weap->SetWeaponActivated(true);
 		return true;

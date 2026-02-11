@@ -9,8 +9,8 @@
 /**
  *  Base class for a PickupEffect
  * 
- * PickupEfect will be implemented as classed that derives from UPickupEffect.
- * A pickup blueprint will be able to have a list of UPickupEffect to dinamically assign effects to pickups
+ * Pickup Effects such as taking an health pickup = AddHealth are implemented as classes that derives from UPickupEffect.
+ * A pickup blueprint is able to have a list of UPickupEffect to dinamically assign effects to pickups
  */
 UCLASS(Abstract, BlueprintType, EditInlineNew, DefaultToInstanced)
 class MYTOURNAMENT_API UPickupEffect : public UObject

@@ -10,6 +10,11 @@
 class AWeaponInstance;
 class UInputAction;
 
+/*
+	This struct represents a wepapon present in the inventory
+	_asset is always going to be set
+	_instance only when the weapon is active or waiting to be gc collected (TODO we can cache the instance instead of destroying it and instantiating it every time the weapon is swapped)
+*/
 USTRUCT(BlueprintType)
 struct FWeaponInInventoryEntry
 {
@@ -19,10 +24,10 @@ struct FWeaponInInventoryEntry
 
 	FWeaponInInventoryEntry(UWeaponAsset* InAsset) : _asset(InAsset) {}
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	TObjectPtr<UWeaponAsset> _asset;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	TObjectPtr<AWeaponInstance> _instance;
 };
 
@@ -50,7 +55,7 @@ protected:
 	UPROPERTY()
 	TObjectPtr<AActor> _inventoryOwner;
 
-	// Weapon the owner of this inventory has as soon as he spawns
+	// Weapon the owner of this inventory has as soon as he spawns. This could have been an array if we wanted to have multiple weapons upon spawn
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UWeaponAsset> _defaultWeapon;
 
@@ -58,14 +63,15 @@ protected:
 	uint32 _defaultWeaponAmmoCount = 60;
 
 	UPROPERTY(VisibleAnywhere)
-	EWeaponSlot _currentWeaponSlot = EWeaponSlot::Slot0; // slot0 means not-initialized
-
-	UPROPERTY(EditAnywhere)
-	TMap<EWeaponSlot, FWeaponInInventoryEntry> _weapons;
+	EWeaponSlot _currentWeaponSlot = EWeaponSlot::None; // None means not-initialized
 
 	UPROPERTY(VisibleAnywhere)
+	TMap<EWeaponSlot, FWeaponInInventoryEntry> _weapons;
+
+	UPROPERTY(EditAnywhere) // it's probably useful to be able to set the ammo value in the details panel
 	TMap<TObjectPtr<UAmmoType>, uint32> _ammo;
 
+	// Input Actions
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UInputAction> _IAWeaponSlotOne;
 
@@ -109,7 +115,7 @@ public:
 	UFUNCTION()
 	bool TryAddAmmo(UAmmoType* ammoToAdd, uint32 ammoCount);
 
-	// Tries to spawn/enable the weapon instance
+	// Tries to spawn/enable the weapon instance of _weapons[slot]
 	UFUNCTION()
 	bool TryEquip(EWeaponSlot slot);
 
@@ -118,7 +124,7 @@ public:
 
 	// Returns the ammo of the currently equipped weapon (if any)
 	UFUNCTION()
-	int32 GetCurrentWeaponAmmoCount() const;
+	uint32 GetCurrentWeaponAmmoCount() const;
 
 	// Consumes 'val' of the passed ammo type
 	UFUNCTION()
@@ -126,7 +132,7 @@ public:
 
 	// Returns the ammo count of a specific type
 	UFUNCTION()
-	uint32 GetAmmoCount(UAmmoType* ammo);
+	uint32 GetAmmoCount(UAmmoType* ammo) const;
 
 	UFUNCTION()
 	void SwitchWeaponInputAction(const FInputActionValue& Value, const EWeaponSlot slot);
@@ -138,6 +144,6 @@ public:
 	UWeaponAsset* GetCurrentWeaponAsset();
 
 	UFUNCTION()
-	AWeaponInstance* GetCurrentWeapon();
+	AWeaponInstance* GetCurrentWeaponInstance();
 
 };

@@ -61,7 +61,7 @@ EBTNodeResult::Type UBTTask_MoveToRandomSpotOnNavmesh::ExecuteTask(UBehaviorTree
 	}
 
 	// Latent task
-	_aiController->ReceiveMoveCompleted.AddDynamic(this, &UBTTask_MoveToRandomSpotOnNavmesh::OnMoveCompleted);
+	_aiController->ReceiveMoveCompleted.AddUniqueDynamic(this, &UBTTask_MoveToRandomSpotOnNavmesh::OnMoveCompleted);
 	return EBTNodeResult::InProgress;
 }
 
