@@ -533,11 +533,11 @@ void AMyTournamentCharacter::HandleOnWeaponEquipped(const FWeaponInInventoryEntr
 	// Update Anims
 	// Reset current _fpsAnimInstance before setting a new one
 	_fpsAnimInstance->ResetProperties();
-	_fpsMesh->SetAnimInstanceClass(weaponEntry._instance->_fpsAnimBlueprint->GeneratedClass);
+	_fpsMesh->SetAnimInstanceClass(weaponEntry._asset->_fpsAnimBlueprint->GeneratedClass);
 	_fpsAnimInstance = Cast<UMyTournamentAnimInstance>(_fpsMesh->GetAnimInstance());
 
 	_characterAnimInstance->ResetProperties();
-	GetMesh()->SetAnimInstanceClass(weaponEntry._instance->_tpsAnimBlueprint->GeneratedClass);
+	GetMesh()->SetAnimInstanceClass(weaponEntry._asset->_tpsAnimBlueprint->GeneratedClass);
 	_characterAnimInstance = Cast<UMyTournamentAnimInstance>(GetMesh()->GetAnimInstance());
 
 	// Set aiming _aimingDownsightUW
@@ -555,7 +555,7 @@ void AMyTournamentCharacter::HandleOnWeaponEquipped(const FWeaponInInventoryEntr
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* inputSubsystem = ULocalPlayer::GetSubsystem< UEnhancedInputLocalPlayerSubsystem>(playerController->GetLocalPlayer()))
 		{
-			inputSubsystem->AddMappingContext(weaponEntry._instance->_weaponMappingContext, 1);
+			inputSubsystem->AddMappingContext(weaponEntry._asset->_weaponMappingContext, 1);
 		}
 	}
 	weaponEntry._instance->BindFirePrimaryAction(_firePrimaryAction);
@@ -571,7 +571,7 @@ void AMyTournamentCharacter::HandleOnWeaponUnequipped(const FWeaponInInventoryEn
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* inputSubsystem = ULocalPlayer::GetSubsystem< UEnhancedInputLocalPlayerSubsystem>(playerController->GetLocalPlayer()))
 		{
-			inputSubsystem->RemoveMappingContext(weaponEntry._instance->_weaponMappingContext);
+			inputSubsystem->RemoveMappingContext(weaponEntry._asset->_weaponMappingContext);
 		}
 	}
 

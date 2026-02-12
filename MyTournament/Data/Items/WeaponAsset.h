@@ -8,6 +8,8 @@
 #include "WeaponAsset.generated.h"
 
 class AWeaponInstance;
+class UInputMappingContext;
+class AProjectile;
 
 UENUM(BlueprintType)
 enum class EWeaponSlot : uint8
@@ -81,6 +83,22 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon | Core")
 	TObjectPtr<UAmmoType> _ammoType;
+
+	UPROPERTY(EditAnywhere, Category = "Audio")
+	TObjectPtr<USoundBase> _fireSound;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon | Core", meta = (EditCondition = "_shootingType != EShootingType::Raycast", EditConditionHides))
+	TSubclassOf<AProjectile> _projectileClass;
+
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UInputMappingContext> _weaponMappingContext; // this is set to the player when the weapon is equipped
+
+	// Anim blueprints to use on the TP model (player/ai) when this weapon is used
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon | Anim")
+	TObjectPtr<UAnimBlueprint> _fpsAnimBlueprint;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon | Anim")
+	TObjectPtr<UAnimBlueprint> _tpsAnimBlueprint;
 
 	// Aim Downsight as fire secondary
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)

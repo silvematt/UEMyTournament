@@ -53,23 +53,7 @@ public:
 	TObjectPtr<USkeletalMeshComponent> _additionalSkeletalMesh; // Additional mesh used for the TP weapon for the player, the actual SK_Mesh is set at runtime the same as _skeletalMesh
 
 	UPROPERTY(EditDefaultsOnly)
-	TObjectPtr<UInputMappingContext> _weaponMappingContext; // this is set to the player when the weapon is equipped
-
-	// Anim blueprints to use on the TP model (player/ai) when this weapon is used
-	UPROPERTY(EditDefaultsOnly)
-	TObjectPtr<UAnimBlueprint> _fpsAnimBlueprint;
-
-	UPROPERTY(EditDefaultsOnly)
-	TObjectPtr<UAnimBlueprint> _tpsAnimBlueprint;
-
-	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<AProjectile> _projectileClass;
-
-	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UNiagaraComponent> _muzzleFX;
-
-	UPROPERTY(EditAnywhere, Category = "Audio")
-	TObjectPtr<USoundBase> _fireSound;
 
 	UPROPERTY(EditAnywhere, Category = "Audio")
 	TObjectPtr<UAudioComponent> _audioComponent;

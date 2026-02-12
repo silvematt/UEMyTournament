@@ -117,7 +117,7 @@ void AWeaponInstance::BeginPlay()
 	Super::BeginPlay();
 
 	_fireTimer = _weaponAsset->_fireRate;
-	_audioComponent->SetSound(_fireSound);
+	_audioComponent->SetSound(_weaponAsset->_fireSound);
 
 	_spreadProgressiveAccumulation = 0.0f;
 }
@@ -284,14 +284,14 @@ void AWeaponInstance::SpawnBullet(FVector spawnLocation, FRotator spawnRotation)
 {
 	UWorld* const World = GetWorld();
 
-	if (World && _projectileClass != nullptr)
+	if (World && _weaponAsset->_projectileClass != nullptr)
 	{
 		//Set Spawn Collision Handling Override
 		FActorSpawnParameters ActorSpawnParams;
 		ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
 		// Spawn the projectile at the muzzle
-		AProjectile* prj = World->SpawnActor<AProjectile>(_projectileClass, spawnLocation, spawnRotation, ActorSpawnParams);
+		AProjectile* prj = World->SpawnActor<AProjectile>(_weaponAsset->_projectileClass, spawnLocation, spawnRotation, ActorSpawnParams);
 
 		if (prj)
 			prj->InitializeProjectile(_weaponOwner, this);
