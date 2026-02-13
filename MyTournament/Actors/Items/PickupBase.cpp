@@ -22,6 +22,12 @@ APickupBase::APickupBase()
 	check(_mesh != nullptr);
 	_mesh->SetupAttachment(RootComponent);
 
+	// Collider for pickup
+	_collider = CreateDefaultSubobject<USphereComponent>(TEXT("Collider"));
+	check(_collider != nullptr);
+	_collider->SetSphereRadius(50.0f);
+	_collider->SetupAttachment(_mesh);
+
 	_glowMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("GlowMesh"));
 	check(_glowMesh != nullptr);
 	_glowMesh->SetupAttachment(RootComponent);
@@ -77,10 +83,13 @@ void APickupBase::Initialize()
 	_mesh->SetStaticMesh(_itemAsset->_meshPrimary.Get());
 	_mesh->SetVisibility(true);
 
-	// Mesh's collider will determine overlaps
-	_mesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	_mesh->SetGenerateOverlapEvents(true);
-	_mesh->OnComponentBeginOverlap.AddUniqueDynamic(this, &APickupBase::OnMeshBeginOverlap);
+	// Mesh's collider will not determine collision, but _collider will
+	_mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	_mesh->SetGenerateOverlapEvents(false);
+
+	_collider->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	_collider->SetGenerateOverlapEvents(true);
+	_collider->OnComponentBeginOverlap.AddUniqueDynamic(this, &APickupBase::OnColliderBeginOverlap);
 
 	// Set glowMesh default material
 	if(_glowMesh)
@@ -113,7 +122,7 @@ void APickupBase::Tick(float DeltaTime)
 	}
 }
 
-void APickupBase::OnMeshBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void APickupBase::OnColliderBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	// Check if it was the player
 	UEntityVitalsComponent* vitals = OtherActor->FindComponentByClass<UEntityVitalsComponent>();
@@ -128,8 +137,8 @@ void APickupBase::OnMeshBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor
 		TakePickup(OtherActor);
 
 		// Deactivate the pickup 
-		_mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		_mesh->SetGenerateOverlapEvents(false);
+		_collider->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		_collider->SetGenerateOverlapEvents(false);
 		_mesh->SetVisibility(false);
 		_isCurrentlyActive = false;
 
@@ -160,8 +169,8 @@ void APickupBase::TakePickup(AActor* taker)
 
 void APickupBase::RespawnPickup()
 {
-	_mesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	_mesh->SetGenerateOverlapEvents(true);
+	_collider->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	_collider->SetGenerateOverlapEvents(true);
 	_mesh->SetVisibility(true);
 	_isCurrentlyActive = true;
 

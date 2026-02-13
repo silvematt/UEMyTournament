@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "../../Player/MyTournamentCharacter.h"
 #include "Components/SphereComponent.h"
+
 #include "PickupBase.generated.h"
 
 class UItemAsset;
@@ -21,7 +22,10 @@ private:
 	TSoftObjectPtr<UItemAsset> _itemAsset;
 
 	UPROPERTY(VisibleDefaultsOnly, Category = "Pickup | Base")
-	TObjectPtr<UStaticMeshComponent> _mesh; // will have some sort of collider and determine the pickup collision
+	TObjectPtr<UStaticMeshComponent> _mesh;
+
+	UPROPERTY(VisibleDefaultsOnly, Category = "Pickup | Base")
+	TObjectPtr<USphereComponent> _collider; // Will be the collider for picking up the item
 
 	UPROPERTY(VisibleDefaultsOnly, Category = "Pickup | Glow")
 	TObjectPtr<UStaticMeshComponent> _glowMesh;
@@ -89,7 +93,7 @@ public:
 	void Initialize();
 
 	UFUNCTION()
-	void OnMeshBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	void OnColliderBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	UFUNCTION()
 	virtual void TakePickup(AActor* taker);
