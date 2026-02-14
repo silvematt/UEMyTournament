@@ -54,6 +54,7 @@ void AAIMyTournamentBot::HandleOnVitalsChange(float newHP, float newAP)
 void AAIMyTournamentBot::HandleOnDeath()
 {
 	GetMesh()->SetSimulatePhysics(true);
+	GetMesh()->SetCollisionProfileName(FName("DeadCharacter"), true);
 
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 

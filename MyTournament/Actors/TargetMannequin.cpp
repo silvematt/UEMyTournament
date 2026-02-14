@@ -51,5 +51,6 @@ void ATargetMannequin::HandleOnVitalsChange(float newHP, float newAP)
 
 void ATargetMannequin::HandleOnDeath()
 {
+	_skeletalMesh->SetCollisionProfileName(FName("DeadCharacter"), true);
 	_skeletalMesh->SetSimulatePhysics(true);
 }
