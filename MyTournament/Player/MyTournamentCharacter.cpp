@@ -280,12 +280,12 @@ void AMyTournamentCharacter::DetectRunnableWalls()
 	{
 		// Cast traces left and right
 		bool shouldWallrun = false;
-		bool shouldWallrunRight = false;
+		EWallRunModes shouldWallRunMode = EWallRunModes::None;
 
 		// Check right
 		FHitResult hitRes;
 		FVector start = _cameraComponent->GetComponentLocation();
-		FVector end = start + (_cameraComponent->GetRightVector() * _wallRunCheckVectorLength);
+		FVector end = start + (_cameraComponent->GetRightVector() * _wallLateralRunCheckVectorLength);
 
 		FCollisionQueryParams collParams;
 		collParams.AddIgnoredActor(this);
@@ -301,12 +301,12 @@ void AMyTournamentCharacter::DetectRunnableWalls()
 			if (hitActor->ActorHasTag("WallRunnable") && (_wallRunLastWall == nullptr || (_wallRunLastWall != nullptr && _wallRunLastWall != hitActor))) // check if this wall is different from last wall, since we give the player one jump when he wallruns he could wallrun infinitely on the same wall without the second check
 			{
 				if (_wallRunDebugEnabled)
-					GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("Right wall run!"));
+					GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("Right Wall Run!"));
 
 				shouldWallrun = true;
-				shouldWallrunRight = true;
+				shouldWallRunMode = EWallRunModes::RightWall;
 
-				StartWallRun(shouldWallrunRight, hitActor);
+				StartWallRun(shouldWallRunMode, hitActor);
 				return;
 			}
 		}
@@ -315,7 +315,7 @@ void AMyTournamentCharacter::DetectRunnableWalls()
 		if (!shouldWallrun)
 		{
 			hitRes.Reset(1.f, false);
-			end = start + (-_cameraComponent->GetRightVector() * _wallRunCheckVectorLength);
+			end = start + (-_cameraComponent->GetRightVector() * _wallLateralRunCheckVectorLength);
 
 			if (_wallRunDebugEnabled)
 				DrawDebugLine(GetWorld(), start, end, FColor::Magenta, false, 2.0f, 0, 1.0f);
@@ -328,12 +328,40 @@ void AMyTournamentCharacter::DetectRunnableWalls()
 				if (hitActor->ActorHasTag("WallRunnable") && (_wallRunLastWall == nullptr || (_wallRunLastWall != nullptr && _wallRunLastWall != hitActor)))
 				{
 					if (_wallRunDebugEnabled)
-						GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("Left wall run!"));
+						GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("Left Wall Run!"));
 
 					shouldWallrun = true;
-					shouldWallrunRight = false;
+					shouldWallRunMode = EWallRunModes::LeftWall;
 
-					StartWallRun(shouldWallrunRight, hitActor);
+					StartWallRun(shouldWallRunMode, hitActor);
+					return;
+				}
+			}
+		}
+
+		// Check Vertical Wall
+		if (!shouldWallrun)
+		{
+			hitRes.Reset(1.f, false);
+			end = start + (_cameraComponent->GetForwardVector() * _wallVerticalRunCheckVectorLength);
+
+			if (_wallRunDebugEnabled)
+				DrawDebugLine(GetWorld(), start, end, FColor::Emerald, false, 2.0f, 0, 1.0f);
+
+			if (_movementVector.Y >= _wallRunInputThreshold && FMath::IsNearlyEqual(_movementVector.X, 0.0f, 0.1f) && GetWorld()->LineTraceSingleByChannel(hitRes, start, end, ECollisionChannel::ECC_Visibility, collParams))
+			{
+				AActor* hitActor = hitRes.GetActor();
+
+				// Check if it's the right tag
+				if (hitActor->ActorHasTag("WallRunnable") && (_wallRunLastWall == nullptr || (_wallRunLastWall != nullptr && _wallRunLastWall != hitActor)))
+				{
+					if (_wallRunDebugEnabled)
+						GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("Vertical Wall Run!"));
+
+					shouldWallrun = true;
+					shouldWallRunMode = EWallRunModes::VerticalWall;
+
+					StartWallRun(shouldWallRunMode, hitActor);
 					return;
 				}
 			}
@@ -341,10 +369,10 @@ void AMyTournamentCharacter::DetectRunnableWalls()
 	}
 }
 
-void AMyTournamentCharacter::StartWallRun(bool isRight, AActor* curWall)
+void AMyTournamentCharacter::StartWallRun(EWallRunModes wRunMode, AActor* curWall)
 {
 	// Intiialize state
-	_wallRunIsWallRunningRight = isRight;
+	_curWallRunMode = wRunMode;
 	_wallRunTimeWallRunning = 0.0f;
 	_wallRunLastWall = curWall;
 
@@ -352,7 +380,7 @@ void AMyTournamentCharacter::StartWallRun(bool isRight, AActor* curWall)
 	_movementComponent->Velocity.Z = 0.0f;
 
 	// Set gravity modifier
-	_movementComponent->GravityScale = _wallRunGravityScaleModifier;
+	_movementComponent->GravityScale = (wRunMode == EWallRunModes::VerticalWall) ? _wallRunVerticalGravityScaleModifier : _wallRunLateralGravityScaleModifier;
 
 	// Check if there's a jump available, otherwise give the player one
 	if (JumpCurrentCount == JumpMaxCount)
@@ -373,10 +401,17 @@ void AMyTournamentCharacter::HandleWallRunMovements(float deltaTime)
 		return;
 	}
 
+	// FORWARD Obstacle detection should only work on left and right wallrun
+	// VERTICAL Obstacle detection should only work on vertical wallrun
+
 	// Check if there's an obstacle in front that interrupts the wall run
 	FHitResult obstacleHitRes;
 	FVector obstacleCheckStart = GetActorLocation();
 	FVector obstacleCheckEnd = obstacleCheckStart + (GetActorForwardVector() * _wallRunForwardObstacleCheckLength);
+
+	// Override the end pos if it's a vertical wall run
+	if(_curWallRunMode == EWallRunModes::VerticalWall)
+		obstacleCheckEnd = obstacleCheckStart + (GetActorUpVector() * _wallRunVerticalObstacleCheckLength);
 
 	FCollisionQueryParams obstacleCheckCollParams;
 	obstacleCheckCollParams.AddIgnoredActor(this);
@@ -384,17 +419,18 @@ void AMyTournamentCharacter::HandleWallRunMovements(float deltaTime)
 	if (_wallRunDebugEnabled)
 		DrawDebugLine(GetWorld(), obstacleCheckStart, obstacleCheckEnd, FColor::Blue, false, 2.0f, 0, 1.0f);
 
-	if (GetWorld()->LineTraceSingleByChannel(obstacleHitRes, obstacleCheckStart, obstacleCheckEnd, ECollisionChannel::ECC_Visibility, obstacleCheckCollParams))
-	{
-		if (_wallRunDebugEnabled)
-			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("Hit something! ") + FString(obstacleHitRes.GetActor()->GetActorNameOrLabel()));
+	
+		if (GetWorld()->LineTraceSingleByChannel(obstacleHitRes, obstacleCheckStart, obstacleCheckEnd, ECollisionChannel::ECC_Visibility, obstacleCheckCollParams))
+		{
+			if (_wallRunDebugEnabled)
+				GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("Hit something! ") + FString(obstacleHitRes.GetActor()->GetActorNameOrLabel()));
 
-		EndWallRun();
-		return;
-	}
+			EndWallRun();
+			return;
+		}
 
 	// Interrupt wall run by input, if the player presses opposite direction + back
-	if (_wallRunIsWallRunningRight)
+	if (_curWallRunMode == EWallRunModes::RightWall)
 	{
 		if (_movementVector.X <= -0.5f && _movementVector.Y <= -0.5f)
 		{
@@ -402,7 +438,7 @@ void AMyTournamentCharacter::HandleWallRunMovements(float deltaTime)
 			return;
 		}
 	}
-	else
+	else if (_curWallRunMode == EWallRunModes::LeftWall)
 	{
 		if (_movementVector.X >= 0.5f && _movementVector.Y <= -0.5f)
 		{
@@ -410,56 +446,71 @@ void AMyTournamentCharacter::HandleWallRunMovements(float deltaTime)
 			return;
 		}
 	}
-
-	// If we're still wallrunning, follows the wall's surface tangent
-
-	// Trace the wall, so we can stick to it
-	FHitResult hitRes;
-	FVector start = GetActorLocation();
-	FVector end = start + (GetActorRightVector() * (_wallRunIsWallRunningRight ? 1 : -1) * _wallRunStickCheckVectorLength);
-
-	FCollisionQueryParams collParams;
-	collParams.AddIgnoredActor(this);
-
-	// Debug the trace
-	if (_wallRunDebugEnabled)
-		DrawDebugLine(GetWorld(), start, end, FColor::Green, false, 3.0f, 0, 1.0f);
-
-	// Check if we're still attached to the wall (if the player looks away, this will fail, so the 'else' will correctly deatach him from the wall)
-	if (GetWorld()->LineTraceSingleByChannel(hitRes, start, end, ECollisionChannel::ECC_Visibility, collParams))
+	else if (_curWallRunMode == EWallRunModes::VerticalWall)
 	{
-		// Check if it's the same wall we've started on
-		if (hitRes.GetActor() == _wallRunLastWall)
+		if (_movementVector.Y <= -0.5f)
 		{
-			// Update normal and impact point
-			_wallRunCurWallNormal = hitRes.ImpactNormal;
-			_wallRunCurWallImpactPoint = hitRes.ImpactPoint;
+			EndWallRun();
+			return;
+		}
+	}
 
-			// Draw wall normal (red)
-			if (_wallRunDebugEnabled)
-				DrawDebugLine(GetWorld(), _wallRunCurWallImpactPoint, _wallRunCurWallImpactPoint + _wallRunCurWallNormal * 200.0f, FColor::Red, false, 3.0f, 0, 2.0f);
+	// If we're still wallrunning
 
-			// Compute the local tangent to get the direction to run along the surface
-			FVector forward = GetActorForwardVector();
-			FVector tangent = (forward - _wallRunCurWallNormal * FVector::DotProduct(forward, _wallRunCurWallNormal));
+	// Slide left/righ walls
+	if (_curWallRunMode == EWallRunModes::LeftWall || _curWallRunMode == EWallRunModes::RightWall)
+	{
+		bool wallRunIsWallRunningRight = _curWallRunMode == EWallRunModes::RightWall;
 
-			if (!tangent.IsNearlyZero(1e-4f))
+		FHitResult hitRes;
+		FVector start = GetActorLocation();
+		FVector end = start + (GetActorRightVector() * (wallRunIsWallRunningRight ? 1 : -1) * _wallRunStickCheckVectorLength);
+
+		FCollisionQueryParams collParams;
+		collParams.AddIgnoredActor(this);
+
+		// Debug the trace
+		if (_wallRunDebugEnabled)
+			DrawDebugLine(GetWorld(), start, end, FColor::Green, false, 3.0f, 0, 1.0f);
+
+		// Check if we're still attached to the wall (if the player looks away, this will fail, so the 'else' will correctly deatach him from the wall)
+		if (GetWorld()->LineTraceSingleByChannel(hitRes, start, end, ECollisionChannel::ECC_Visibility, collParams))
+		{
+			// Check if it's the same wall we've started on
+			if (hitRes.GetActor() == _wallRunLastWall)
 			{
-				tangent = tangent.GetSafeNormal();
+				// Update normal and impact point
+				_wallRunCurWallNormal = hitRes.ImpactNormal;
+				_wallRunCurWallImpactPoint = hitRes.ImpactPoint;
 
-				// Make sure the direction of the tangent is forward
-				if (FVector::DotProduct(tangent, forward) < 0.0f)
-					tangent *= -1.0f;
-
-				// Draw the tangent
+				// Draw wall normal (red)
 				if (_wallRunDebugEnabled)
-					DrawDebugDirectionalArrow(GetWorld(), _wallRunCurWallImpactPoint, _wallRunCurWallImpactPoint + tangent * 200.0f, 30.0f, FColor::Cyan, false, 3, 0, 2.0f);
+					DrawDebugLine(GetWorld(), _wallRunCurWallImpactPoint, _wallRunCurWallImpactPoint + _wallRunCurWallNormal * 200.0f, FColor::Red, false, 3.0f, 0, 2.0f);
 
-				// Set velocity along the tangent: this forces the player to follow the local curvature
-				FVector newVel = tangent * _wallRunSpeed;
-				_movementComponent->Velocity.X = newVel.X;
-				_movementComponent->Velocity.Y = newVel.Y;
-				//_movementComponent->Velocity.Z = newVel.Z;  Keep z the same, so gravity still has effect
+				// Compute the local tangent to get the direction to run along the surface
+				FVector forward = GetActorForwardVector();
+				FVector tangent = (forward - _wallRunCurWallNormal * FVector::DotProduct(forward, _wallRunCurWallNormal));
+
+				if (!tangent.IsNearlyZero(1e-4f))
+				{
+					tangent = tangent.GetSafeNormal();
+
+					// Make sure the direction of the tangent is forward
+					if (FVector::DotProduct(tangent, forward) < 0.0f)
+						tangent *= -1.0f;
+
+					// Draw the tangent
+					if (_wallRunDebugEnabled)
+						DrawDebugDirectionalArrow(GetWorld(), _wallRunCurWallImpactPoint, _wallRunCurWallImpactPoint + tangent * 200.0f, 30.0f, FColor::Cyan, false, 3, 0, 2.0f);
+
+					// Set velocity along the tangent: this forces the player to follow the local curvature
+					FVector newVel = tangent * _lateralWallRunSpeed;
+					_movementComponent->Velocity.X = newVel.X;
+					_movementComponent->Velocity.Y = newVel.Y;
+					//_movementComponent->Velocity.Z = newVel.Z;  Keep z the same, so gravity still has effect
+				}
+				else
+					EndWallRun();
 			}
 			else
 				EndWallRun();
@@ -467,8 +518,44 @@ void AMyTournamentCharacter::HandleWallRunMovements(float deltaTime)
 		else
 			EndWallRun();
 	}
-	else
-		EndWallRun();
+	else if (_curWallRunMode == EWallRunModes::VerticalWall)
+	{
+		FHitResult hitRes;
+		FVector start = GetActorLocation();
+		FVector end = start + (GetActorForwardVector() * _wallVerticalRunCheckVectorLength);
+
+		FCollisionQueryParams collParams;
+		collParams.AddIgnoredActor(this);
+
+		// Debug the trace
+		if (_wallRunDebugEnabled)
+			DrawDebugLine(GetWorld(), start, end, FColor::Emerald, false, 3.0f, 0, 1.0f);
+
+		// Check if we're still attached to the wall (if the player looks away, this will fail, so the 'else' will correctly deatach him from the wall)
+		if (GetWorld()->LineTraceSingleByChannel(hitRes, start, end, ECollisionChannel::ECC_Visibility, collParams))
+		{
+			// Check if it's the same wall we've started on
+			if (hitRes.GetActor() == _wallRunLastWall)
+			{
+				// Update normal and impact point
+				_wallRunCurWallNormal = hitRes.ImpactNormal;
+				_wallRunCurWallImpactPoint = hitRes.ImpactPoint;
+
+				// Draw wall normal
+				if (_wallRunDebugEnabled)
+					DrawDebugLine(GetWorld(), _wallRunCurWallImpactPoint, _wallRunCurWallImpactPoint + _wallRunCurWallNormal * 200.0f, FColor::Red, false, 3.0f, 0, 2.0f);
+
+				FVector newVel = GetActorUpVector() * _verticalWallRunSpeed;
+				_movementComponent->Velocity.X = 0;
+				_movementComponent->Velocity.Y = 0;
+				_movementComponent->Velocity.Z = newVel.Z;
+			}
+			else
+				EndWallRun();
+		}
+		else
+			EndWallRun();
+	}
 }
 
 void AMyTournamentCharacter::EndWallRun()
@@ -480,7 +567,7 @@ void AMyTournamentCharacter::EndWallRun()
 
 void AMyTournamentCharacter::UpdateCameraTilt(float deltaTime)
 {
-	if (!_wallRunIsWallRunning) // Not wallrunning? tilt back to 0
+	if (!_wallRunIsWallRunning || _curWallRunMode == EWallRunModes::VerticalWall) // Not wallrunning? tilt back to 0
 	{
 		FRotator CurrentRotation = _cameraHolder->GetRelativeRotation();
 		float NewRoll = FMath::FInterpTo(CurrentRotation.Pitch, 0.0f, deltaTime, _wallRunCameraTiltInterpSpeed);
@@ -489,7 +576,8 @@ void AMyTournamentCharacter::UpdateCameraTilt(float deltaTime)
 	}
 	else // Wallrunning - tilt left or right
 	{
-		float TargetRoll = _wallRunIsWallRunningRight ? -_wallRunCameraTiltValue : _wallRunCameraTiltValue;
+		bool wallRunIsWallRunningRight = _curWallRunMode == EWallRunModes::RightWall;
+		float TargetRoll = wallRunIsWallRunningRight ? -_wallRunCameraTiltValue : _wallRunCameraTiltValue;
 
 		FRotator currentRotation = _cameraHolder->GetRelativeRotation();
 		float newRoll = FMath::FInterpTo(currentRotation.Pitch, TargetRoll, deltaTime, _wallRunCameraTiltInterpSpeed);
@@ -700,7 +788,7 @@ bool AMyTournamentCharacter::BPF_IsWallRunning()
 
 bool AMyTournamentCharacter::BPF_IsWallRunningRight()
 {
-	return _wallRunIsWallRunningRight;
+	return _curWallRunMode == EWallRunModes::RightWall;
 }
 
 bool AMyTournamentCharacter::BPF_ActivateCurrentWeapon()

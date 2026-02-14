@@ -25,6 +25,16 @@ struct FWeaponInInventoryEntry;
 // Delegates
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDashIsUsedSignature, int, dashesNowAvailable);
 
+// The wallrun modes
+UENUM()
+enum class EWallRunModes : uint8
+{
+	None = 0,
+	LeftWall,
+	RightWall,
+	VerticalWall
+};
+
 UCLASS()
 class MYTOURNAMENT_API AMyTournamentCharacter : public ACharacter, public IWeaponOperator
 {
@@ -152,7 +162,10 @@ protected:
 	float _wallRunInputThreshold = 0.3f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WallRun | Settings")
-	float _wallRunCheckVectorLength = 40.0f; // lenght of the vector to check for walls on the left and right of the player
+	float _wallLateralRunCheckVectorLength = 40.0f; // lenght of the vector to check for walls on the left and right of the player
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WallRun | Settings")
+	float _wallVerticalRunCheckVectorLength = 80.0f; // lenght of the vector to check for vertical walls
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WallRun | Settings")
 	float _wallRunStickCheckVectorLength = 80.0f;	// Once the wall run has started, this is the lenght of the vector that checks if we're still attached to the wall
@@ -160,7 +173,10 @@ protected:
 													// 2: if the "stick-check" has the vector length too small, if we're sliding along a rounded surface it may fail
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WallRun | Settings")
-	float _wallRunForwardObstacleCheckLength = 50.0f; // While wallruning, we check if there's an object in front of us that would be an obstacle to our wallrun. If so, the wallrun will be stopped.
+	float _wallRunForwardObstacleCheckLength = 50.0f; // While lateral wallruning, we check if there's an object in front of us that would be an obstacle to our wallrun. If so, the wallrun will be stopped.
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WallRun | Settings")
+	float _wallRunVerticalObstacleCheckLength = 100.0f; // While vertical wallruning, we check if there's an object on top of our head that would be an obstacle to our wallrun. If so, the wallrun will be stopped.
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WallRun | Settings")
 	float _wallRunCameraTiltValue = 10.0f;
@@ -170,17 +186,23 @@ protected:
 
 	// - Behavior
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WallRun | Behavior")
-	float _wallRunGravityScaleModifier = 0.25f;
+	float _wallRunLateralGravityScaleModifier = 0.25f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WallRun | Behavior")
-	float _wallRunSpeed = 1000.0f;
+	float _wallRunVerticalGravityScaleModifier = 0.5f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WallRun | Behavior")
+	float _lateralWallRunSpeed = 1000.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WallRun | Behavior")
+	float _verticalWallRunSpeed = 500.0f;
 
 	// - State
 	UPROPERTY(VisibleAnywhere, Category = "WallRun | State")
 	bool _wallRunIsWallRunning = false;
 
 	UPROPERTY(VisibleAnywhere, Category = "WallRun | State")
-	bool _wallRunIsWallRunningRight = false;
+	EWallRunModes _curWallRunMode = EWallRunModes::None;
 
 	UPROPERTY(VisibleAnywhere, Category = "WallRun | State")
 	float _wallRunTimeWallRunning = 0.0f;
@@ -264,7 +286,7 @@ public:
 	void DetectRunnableWalls();
 
 	UFUNCTION()
-	void StartWallRun(bool isRight, AActor* curWall);
+	void StartWallRun(EWallRunModes wRunMode, AActor* curWall);
 
 	UFUNCTION()
 	void HandleWallRunMovements(float deltaTime);
