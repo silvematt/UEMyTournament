@@ -724,6 +724,19 @@ FVector AMyTournamentCharacter::GetAimPoint_Implementation()
 	return targetPosition;
 }
 
+// Returns if the player can fire or not
+bool AMyTournamentCharacter::CanPrimaryFire_Implementation()
+{
+	// Player cannot fire if he's vertical wallrunning
+	return (!_wallRunIsWallRunning || _curWallRunMode != EWallRunModes::VerticalWall);
+}
+
+// Returns if the player can fire or not
+bool AMyTournamentCharacter::CanSecondaryFire_Implementation()
+{
+	// For now follow same behavior of CanPrimaryFire
+	return CanPrimaryFire_Implementation();
+}
 
 void AMyTournamentCharacter::HandleOnWeaponFirePrimary()
 {

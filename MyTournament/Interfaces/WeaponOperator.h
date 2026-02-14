@@ -31,4 +31,10 @@ public:
 	// Returns whether or not the weapon operator is aiming downsight
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	bool IsAimingDownsight();
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	bool CanPrimaryFire();
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	bool CanSecondaryFire();
 };

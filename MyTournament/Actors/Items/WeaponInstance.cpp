@@ -184,6 +184,10 @@ void AWeaponInstance::FirePrimary()
 	if (!_isWeaponActivated)
 		return;
 
+	// Check if the weapon operator can fire
+	if (!IWeaponOperator::Execute_CanPrimaryFire(_weaponOwner))
+		return;
+
 	// if(_fireTimer >= _weaponAsset->_fireRate) If the weapon can't fire, you may not want to pick up the input (you can double tap for continuous burst otherwise), but it can feel more clunky
 	_bIsTriggerHeld = true;
 }
@@ -196,6 +200,10 @@ void AWeaponInstance::StopFiringPrimary()
 void AWeaponInstance::FireSecondary()
 {
 	if (!_isWeaponActivated)
+		return;
+
+	// Check if the weapon operator can fire
+	if (!IWeaponOperator::Execute_CanSecondaryFire(_weaponOwner))
 		return;
 
 	_bIsSecondTriggerHeld = true;

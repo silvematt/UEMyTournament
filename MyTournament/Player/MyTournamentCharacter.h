@@ -317,6 +317,12 @@ public:
 	bool IsAimingDownsight_Implementation() override;
 
 	UFUNCTION()
+	bool CanPrimaryFire_Implementation() override;
+
+	UFUNCTION()
+	bool CanSecondaryFire_Implementation() override;
+
+	UFUNCTION()
 	void HandleOnWeaponFirePrimary();
 
 	UFUNCTION()
