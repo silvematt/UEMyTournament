@@ -30,9 +30,9 @@ UENUM()
 enum class EWallRunModes : uint8
 {
 	None = 0,
-	LeftWall,
-	RightWall,
-	VerticalWall
+	LeftWall = 1, // 1 referenced in anim blueprint
+	RightWall = 2, // 2 referenced in anim blueprint
+	VerticalWall = 3 // 3 is referenced in the anim blueprint
 };
 
 UCLASS()
@@ -337,6 +337,9 @@ public:
 
 	UFUNCTION(BlueprintPure)
 	bool BPF_IsWallRunningRight();
+
+	UFUNCTION(BlueprintPure)
+	int BPF_GetCurrentWallRunningMode();
 
 	UFUNCTION(BlueprintCallable)
 	bool BPF_ActivateCurrentWeapon();

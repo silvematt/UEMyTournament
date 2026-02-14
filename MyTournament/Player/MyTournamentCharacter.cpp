@@ -801,3 +801,8 @@ bool AMyTournamentCharacter::BPF_ActivateCurrentWeapon()
 
 	return false;
 }
+
+int AMyTournamentCharacter::BPF_GetCurrentWallRunningMode()
+{
+	return static_cast<int32>(_curWallRunMode);
+}
