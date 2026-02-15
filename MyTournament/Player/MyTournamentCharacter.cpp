@@ -554,7 +554,15 @@ void AMyTournamentCharacter::HandleWallRunMovements(float deltaTime)
 				EndWallRun();
 		}
 		else
+		{
+			// Launch the character to climb the wall we've run on
+			if (!FMath::IsNearlyEqual(_verticalWallRunLaunchForceToClimb, 0.0f, 0.1f))
+			{
+				LaunchCharacter(FVector(0, 0, _verticalWallRunLaunchForceToClimb), true, true);
+			}
+
 			EndWallRun();
+		}
 	}
 }
 

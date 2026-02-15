@@ -197,6 +197,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WallRun | Behavior")
 	float _verticalWallRunSpeed = 500.0f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WallRun | Behavior")
+	float _verticalWallRunLaunchForceToClimb = 500.0f; // when a wallrun is completed (or cancelled by looking away) we can automatically launch the character with a little bit of force in order to get up and climb the wall
+
 	// - State
 	UPROPERTY(VisibleAnywhere, Category = "WallRun | State")
 	bool _wallRunIsWallRunning = false;
