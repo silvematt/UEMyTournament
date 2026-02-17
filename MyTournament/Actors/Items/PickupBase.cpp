@@ -3,10 +3,10 @@
 
 #include "PickupBase.h"
 #include "Components/AudioComponent.h"
-#include "../../Data/Items/ItemAsset.h"
-#include "../../Data/Items/Effects/HealPickupEffect.h"
-#include "../../Actors/Components/EntityVitalsComponent.h"
-#include "../../MyTournamentGameMode.h"
+#include "Data/Items/ItemAsset.h"
+#include "Data/Items/Effects/HealPickupEffect.h"
+#include "Actors/Components/EntityVitalsComponent.h"
+#include "MyTournamentGameMode.h"
 
 // Sets default values
 APickupBase::APickupBase()

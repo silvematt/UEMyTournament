@@ -2,9 +2,9 @@
 
 
 #include "DamageAreaBase.h"
-#include "../../Interfaces/Damageable.h"
+#include "Interfaces/Damageable.h"
 #include "Components/ShapeComponent.h"
-#include <MyTournament/Actors/Components/EntityVitalsComponent.h>
+#include "Actors/Components/EntityVitalsComponent.h"
 
 // Sets default values
 ADamageAreaBase::ADamageAreaBase()

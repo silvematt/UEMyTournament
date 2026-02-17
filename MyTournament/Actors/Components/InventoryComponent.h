@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "../../Data/Items/WeaponAsset.h"
+#include "Data/Items/WeaponAsset.h"
 #include "InventoryComponent.generated.h"
 
 class AWeaponInstance;

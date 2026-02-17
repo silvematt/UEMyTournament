@@ -2,7 +2,7 @@
 
 
 #include "TargetMannequin.h"
-#include "Components/EntityVitalsComponent.h"
+#include "Actors/Components/EntityVitalsComponent.h"
 
 // Sets default values
 ATargetMannequin::ATargetMannequin()

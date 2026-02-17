@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "../../Player/MyTournamentCharacter.h"
+#include "Actors/Characters/MyTournamentCharacterBase.h"
 #include "Components/SphereComponent.h"
 
 #include "PickupBase.generated.h"

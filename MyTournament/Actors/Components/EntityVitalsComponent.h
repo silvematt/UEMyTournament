@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "../../Interfaces/Damageable.h"
+#include "Interfaces/Damageable.h"
 #include "EntityVitalsComponent.generated.h"
 
 // Delegates

@@ -5,9 +5,9 @@
 #include "Components/SphereComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/Character.h"
-#include "../../Data/Items/WeaponAsset.h"
-#include "../../Actors/Items/WeaponInstance.h"
-#include "../Components/EntityVitalsComponent.h"
+#include "Data/Items/WeaponAsset.h"
+#include "Actors/Items/WeaponInstance.h"
+#include "Actors/Components/EntityVitalsComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 
 // Sets default values

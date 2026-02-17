@@ -2,8 +2,8 @@
 
 
 #include "AddAmmoPickupEffect.h"
-#include "../../../Player/MyTournamentCharacter.h"
-#include "../../../Actors/Components/InventoryComponent.h"
+#include "Actors/Characters/MyTournamentCharacterBase.h"
+#include "Actors/Components/InventoryComponent.h"
 
 bool UAddAmmoPickupEffect::ApplyTo_Implementation(AActor* taker)
 {

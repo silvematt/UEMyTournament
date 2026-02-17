@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "../../Interfaces/WeaponOperator.h"
+#include "Interfaces/WeaponOperator.h"
 #include "WeaponInstance.generated.h"
 
 class UWeaponAsset;

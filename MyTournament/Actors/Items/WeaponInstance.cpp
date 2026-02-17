@@ -2,11 +2,11 @@
 
 
 #include "WeaponInstance.h"
-#include "../../Player/MyTournamentCharacter.h"
-#include "../../Actors/Items/Projectile.h"
-#include "../../Interfaces/Damageable.h"
-#include "../../Actors/Components/InventoryComponent.h"
-#include "../../Actors/Components/EntityVitalsComponent.h"
+#include "Actors/Characters/MyTournamentCharacterBase.h"
+#include "Actors/Items/Projectile.h"
+#include "Interfaces/Damageable.h"
+#include "Actors/Components/InventoryComponent.h"
+#include "Actors/Components/EntityVitalsComponent.h"
 #include "Components/AudioComponent.h"
 #include "NiagaraComponent.h"
 #include "Blueprint/UserWidget.h"
@@ -41,7 +41,7 @@ AWeaponInstance::AWeaponInstance()
 void AWeaponInstance::BindFirePrimaryAction(const UInputAction* InputToBind)
 {
 	// Set up action bindings
-	if (AMyTournamentCharacter* pc = Cast<AMyTournamentCharacter>(_weaponOwner))
+	if (AMyTournamentCharacterBase* pc = Cast<AMyTournamentCharacterBase>(_weaponOwner))
 	{
 		if (UEnhancedInputComponent* enhancedInputComponent = Cast<UEnhancedInputComponent>(pc->InputComponent))
 		{
@@ -59,7 +59,7 @@ void AWeaponInstance::BindFirePrimaryAction(const UInputAction* InputToBind)
 void AWeaponInstance::BindFireSecondaryAction(const UInputAction* InputToBind)
 {
 	// Set up action bindings
-	if (AMyTournamentCharacter* pc = Cast<AMyTournamentCharacter>(_weaponOwner))
+	if (AMyTournamentCharacterBase* pc = Cast<AMyTournamentCharacterBase>(_weaponOwner))
 	{
 		if (UEnhancedInputComponent* enhancedInputComponent = Cast<UEnhancedInputComponent>(pc->InputComponent))
 		{
@@ -76,7 +76,7 @@ void AWeaponInstance::BindFireSecondaryAction(const UInputAction* InputToBind)
 void AWeaponInstance::UnbindInputActions()
 {
 	// Remove previously made bindings
-	if (AMyTournamentCharacter* pc = Cast<AMyTournamentCharacter>(_weaponOwner))
+	if (AMyTournamentCharacterBase* pc = Cast<AMyTournamentCharacterBase>(_weaponOwner))
 	{
 		if (UEnhancedInputComponent* enhancedInputComponent = Cast<UEnhancedInputComponent>(pc->InputComponent))
 		{

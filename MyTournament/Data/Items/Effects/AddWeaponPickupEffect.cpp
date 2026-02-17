@@ -2,11 +2,19 @@
 
 
 #include "AddWeaponPickupEffect.h"
-#include "../../../Player/MyTournamentCharacter.h"
-#include "../../../Actors/Components/InventoryComponent.h"
+#include "Actors/Characters/MyTournamentCharacterBase.h"
+#include "Actors/Components/InventoryComponent.h"
 
 bool UAddWeaponPickupEffect::ApplyTo_Implementation(AActor* taker)
 {
+	TArray<UInventoryComponent*> Inventories;
+	taker->GetComponents<UInventoryComponent>(Inventories);
+
+	if (Inventories.Num() > 1)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("DUPLICATE FOUND! Bot has %d inventories."), Inventories.Num()));
+	}
+
 	if (taker)
 	{
 		// Check if its the player

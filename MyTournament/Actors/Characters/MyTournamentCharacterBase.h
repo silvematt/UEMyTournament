@@ -9,8 +9,8 @@
 #include "EnhancedInputSubsystems.h" 
 #include "InputActionValue.h"
 #include "Camera/CameraComponent.h"
-#include "../Interfaces/WeaponOperator.h"
-#include "MyTournamentCharacter.generated.h"
+#include "Interfaces/WeaponOperator.h"
+#include "MyTournamentCharacterBase.generated.h"
 
 class UInputMappingContext;
 class UInputAction;
@@ -35,8 +35,11 @@ enum class EWallRunModes : uint8
 	VerticalWall = 3 // 3 is referenced in the anim blueprint
 };
 
-UCLASS()
-class MYTOURNAMENT_API AMyTournamentCharacter : public ACharacter, public IWeaponOperator
+/*
+AMyTournamentCharacterBase needs a C++ derived class (Player/Bot)
+*/
+UCLASS(Abstract)
+class MYTOURNAMENT_API AMyTournamentCharacterBase : public ACharacter, public IWeaponOperator
 {
 	GENERATED_BODY()
 
@@ -44,107 +47,44 @@ class MYTOURNAMENT_API AMyTournamentCharacter : public ACharacter, public IWeapo
 protected:
 
 	// Input
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-	TObjectPtr<UInputMappingContext> _baseInputMappingContext;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-	TObjectPtr<UInputAction> _moveAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-	TObjectPtr<UInputAction> _jumpAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-	TObjectPtr<UInputAction> _lookAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-	TObjectPtr<UInputAction> _crouchAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-	TObjectPtr<UInputAction> _firePrimaryAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-	TObjectPtr<UInputAction> _fireSecondaryAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "	Input")
-	TObjectPtr<UInputAction> _dashAction;
-
-	UPROPERTY(VisibleAnywhere, Category = "Input")
+	UPROPERTY(VisibleAnywhere, Category = "CharacterBase | Player | Input")
 	FVector2D _movementVector;
 
 	// Dash
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dash | Behavior")
-	float _dashInputThreshold = 0.25f; // _movementVector.Length() has to be >= than _dashInputThreshold for the dash to be able to happen
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dash | Behavior")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CharacterBase | Dash | Behavior")
 	float _dashForce = 1500.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dash | Behavior")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CharacterBase | Dash | Behavior")
 	float _dashVerticalLift = 100.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dash | Behavior")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CharacterBase | Dash | Behavior")
 	float _dashGroundedMultiplier = 1.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dash | Behavior")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CharacterBase | Dash | Behavior")
 	float _dashAirboneMultiplier = 0.75f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dash | Behavior")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CharacterBase | Dash | Behavior")
 	int _dashAvailableNum = 2;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dash | Behavior")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CharacterBase | Dash | Behavior")
 	float _dashRestoreCooldown = 1.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dash | State")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CharacterBase | Dash | State")
 	int _dashCurAvaiable = 2;
 
+
 	// Components
-
-	// - Camera
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
-	TObjectPtr<UCameraComponent> _cameraComponent;
-
-	UPROPERTY(EditAnywhere, Category = Camera)
-	float _cameraFOV = 90.0f;
-
-	UPROPERTY(EditAnywhere, Category = Camera)
-	float _cameraScale = 0.6f;
-
-	// - Camera Holder
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
-	TObjectPtr<USceneComponent> _cameraHolder;
-
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Camera")
-	FTransform _fpsMeshHeadSocket; // to set _cameraHolder position always to be on the head socket
 
 	// - Animation
 	UPROPERTY(VisibleAnywhere, Category = "Animation")
 	TObjectPtr<UMyTournamentAnimInstance> _characterAnimInstance;
 
-	UPROPERTY(VisibleAnywhere, Category = "Animation")
-	TObjectPtr<UMyTournamentAnimInstance> _fpsAnimInstance;
-
-	UPROPERTY(EditAnywhere, Category = "Animation")
-	TObjectPtr<UAnimBlueprint> _fpsDefaultAnim;
-
 	UPROPERTY(EditAnywhere, Category = "Animation")
 	TObjectPtr<UAnimBlueprint> _tpsDefaultAnim;
-
-	// - Mesh
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "First Person")
-	TObjectPtr<USkeletalMeshComponent> _fpsMesh;
 
 	// - Character Component (inerithed)
 	UPROPERTY(VisibleDefaultsOnly)
 	TObjectPtr<UCharacterMovementComponent> _movementComponent;
-
-	// HUD
-	UPROPERTY(EditAnywhere, Category = "HUD")
-	TSubclassOf<UMyTournamentUI> _myTournamentUIClass;
-
-	UPROPERTY()
-	TObjectPtr<UMyTournamentUI> _myTournamentUI;
-
-	UPROPERTY()
-	TObjectPtr<UUserWidget> _currentAimingDownsightUW;
 
 	// Vitals
 	UPROPERTY(VisibleAnywhere, Category = "Vitals")
@@ -177,12 +117,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WallRun | Settings")
 	float _wallRunVerticalObstacleCheckLength = 100.0f; // While vertical wallruning, we check if there's an object on top of our head that would be an obstacle to our wallrun. If so, the wallrun will be stopped.
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WallRun | Settings")
-	float _wallRunCameraTiltValue = 10.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WallRun | Settings")
-	float _wallRunCameraTiltInterpSpeed = 5.0f;
 
 	// - Behavior
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WallRun | Behavior")
@@ -227,12 +161,6 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "State")
 	bool _isAimingDownsight = false;
 
-	UPROPERTY(VisibleAnywhere, Category = "State")
-	float _normalLookSensitivity = 1.0f;
-
-	UPROPERTY(VisibleAnywhere, Category = "State")
-	float _aimingDownsightLookSensitivity = 0.25f;
-
 public:
 	// Delegates
 	UPROPERTY(BlueprintAssignable)
@@ -244,7 +172,7 @@ public:
 // Methods
 public:
 	// Sets default values for this character's properties
-	AMyTournamentCharacter();
+	AMyTournamentCharacterBase();
 
 protected:
 	// Called when the game starts or when spawned
@@ -261,18 +189,6 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-	UFUNCTION()
-	void Move(const FInputActionValue& inputValue);
-
-	UFUNCTION()
-	void Look(const FInputActionValue& inputValue);
-
-	UFUNCTION()
-	void StopMoving();
-
 	UFUNCTION()
 	void CustomJump();
 
@@ -281,6 +197,9 @@ public:
 
 	UFUNCTION()
 	void Dash();
+
+	UFUNCTION()
+	virtual void PerformDash();
 
 	UFUNCTION()
 	void RefillOneDash();
@@ -298,23 +217,14 @@ public:
 	void EndWallRun();
 
 	UFUNCTION()
-	void UpdateCameraTilt(float deltaTime);
-
-	UFUNCTION()
 	bool IsInNormalGroundedMovements();
 
 	UFUNCTION()
 	void CustomCrouchToggle();
 
-	UFUNCTION()
-	void HandleOnWeaponEquipped(const FWeaponInInventoryEntry& weaponEntry);
-
-	UFUNCTION()
-	void HandleOnWeaponUnequipped(const FWeaponInInventoryEntry& weaponEntry);
-
 	// IWeaponOperator
 	UFUNCTION()
-	FVector GetAimPoint_Implementation() override;
+	virtual FVector GetAimPoint_Implementation() override;
 
 	UFUNCTION()
 	bool IsAimingDownsight_Implementation() override;
@@ -325,22 +235,11 @@ public:
 	UFUNCTION()
 	bool CanSecondaryFire_Implementation() override;
 
-	UFUNCTION()
-	void HandleOnWeaponFirePrimary();
-
-	UFUNCTION()
-	void HandleOnWeaponFireSecondary();
-
-	UFUNCTION()
-	void AimDownsight();
-
-	UFUNCTION()
-	void StopAimingDownsight();
+	// BP Functions
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void BP_OnWeaponFiresPrimary();
 
-	// Blueprint
 	UFUNCTION(BlueprintPure)
 	bool BPF_IsWallRunning();
 
@@ -352,5 +251,30 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	bool BPF_ActivateCurrentWeapon();
-};
 
+	UFUNCTION(BlueprintPure)
+	virtual FRotator BPF_GetWorldRotation();
+
+
+	// Pure Functions that needs to be overriden by child classes
+	// 
+	// Inputs Checks that can be different from player and bots 
+	// For example, in order to dash the player has to have a certain movementVector, while it's not necessary for the AI
+	UFUNCTION()
+	virtual bool CanDash() PURE_VIRTUAL(AMyTournamentCharacterBase::CanDash, return false;);
+
+	UFUNCTION()
+	virtual void HandleOnWeaponFirePrimary() PURE_VIRTUAL(AMyTournamentCharacterBase::HandleOnWeaponFirePrimary, ;);
+	UFUNCTION()
+	virtual void HandleOnWeaponFireSecondary() PURE_VIRTUAL(AMyTournamentCharacterBase::HandleOnWeaponFireSecondary, ;);
+
+	UFUNCTION()
+	virtual void AimDownsight() PURE_VIRTUAL(AMyTournamentCharacterBase::AimDownsight, ;);
+	UFUNCTION()
+	virtual void StopAimingDownsight() PURE_VIRTUAL(AMyTournamentCharacterBase::StopAimingDownsight, ;);
+
+	UFUNCTION()
+	virtual void HandleOnWeaponEquipped(const FWeaponInInventoryEntry& weaponEntry) PURE_VIRTUAL(AMyTournamentCharacterBase::HandleOnWeaponEquipped, ;);
+	UFUNCTION()
+	virtual void HandleOnWeaponUnequipped(const FWeaponInInventoryEntry& weaponEntry) PURE_VIRTUAL(AMyTournamentCharacterBase::HandleOnWeaponUnequipped, ;);
+};

@@ -7,10 +7,10 @@
 #include "Components/Image.h"
 #include "Components/Overlay.h"
 #include <Kismet/GameplayStatics.h>
-#include "../Player/MyTournamentCharacter.h"
-#include "../Actors/Components/EntityVitalsComponent.h"
-#include "../Actors/Components/InventoryComponent.h"
-#include "../Actors/Items/WeaponInstance.h"
+#include "Actors/Characters/MyTournamentCharacterBase.h"
+#include "Actors/Components/EntityVitalsComponent.h"
+#include "Actors/Components/InventoryComponent.h"
+#include "Actors/Items/WeaponInstance.h"
 
 void UMyTournamentUI::NativeConstruct()
 {
@@ -24,7 +24,7 @@ void UMyTournamentUI::CustomInitialize()
 	// Initialize UI 
 	_weaponOverlay->SetVisibility(ESlateVisibility::Hidden);
 
-	AMyTournamentCharacter* myCharacter = Cast<AMyTournamentCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+	AMyTournamentCharacterBase* myCharacter = Cast<AMyTournamentCharacterBase>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 
 	// Bind to delegates
 	// Dashes

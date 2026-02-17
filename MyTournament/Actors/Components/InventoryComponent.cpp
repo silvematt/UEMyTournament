@@ -2,8 +2,9 @@
 
 
 #include "InventoryComponent.h"
-#include "../Items/WeaponInstance.h"
-#include <MyTournament/Player/MyTournamentCharacter.h>
+#include "Actors/Items/WeaponInstance.h"
+#include "Actors/Characters/MyTournamentCharacterBase.h"
+#include "Player/MyTournamentPlayer.h"
 #include <Kismet/KismetMathLibrary.h>
 
 // Sets default values for this component's properties
@@ -26,7 +27,7 @@ void UInventoryComponent::BeginPlay()
 void UInventoryComponent::BindWeaponSwitchActions()
 {
 	// Set up action bindings
-	if (AMyTournamentCharacter* pc = Cast<AMyTournamentCharacter>(_inventoryOwner))
+	if (AMyTournamentPlayer* pc = Cast<AMyTournamentPlayer>(_inventoryOwner))
 	{
 		if (UEnhancedInputComponent* enhancedInputComponent = Cast<UEnhancedInputComponent>(pc->InputComponent))
 		{
@@ -79,6 +80,7 @@ bool UInventoryComponent::TryAddWeapon(UWeaponAsset* weaponToAdd, uint32 ammoCou
 		TryEquip(weaponToAdd->_weaponSlot);
 
 	_onWeaponIsAddedDelegate.Broadcast(weaponToAdd);
+
 	return true;
 }
 
@@ -119,6 +121,7 @@ bool UInventoryComponent::TryEquip(EWeaponSlot slot)
 	_currentWeaponSlot = slot;
 
 	_onWeaponIsEquippedDelegate.Broadcast(_weapons[slot]);
+
 	return true;
 }
 
